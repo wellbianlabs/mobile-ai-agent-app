@@ -1,0 +1,74 @@
+{
+  "expo": {
+    "name": "Multimodal Agent Composer",
+    "slug": "multimodal-agent-composer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#4AA0E6"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.multimodal.composer",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "음성을 텍스트·이미지와 결합해 AI 에이전트로 전달하기 위해 마이크를 사용합니다.",
+        "NSSpeechRecognitionUsageDescription": "말한 내용을 실시간으로 문자화해 검색하기 위해 음성 인식을 사용합니다.",
+        "NSCameraUsageDescription": "현장 사진을 즉시 촬영해 입력에 첨부하기 위해 카메라를 사용합니다.",
+        "NSPhotoLibraryUsageDescription": "갤러리의 이미지를 입력에 첨부하기 위해 사진 보관함에 접근합니다.",
+        "NSLocationWhenInUseUsageDescription": "현재 위치의 날씨를 바로 알려드리기 위해 위치를 사용합니다."
+      }
+    },
+    "android": {
+      "package": "com.multimodal.composer",
+      "permissions": [
+        "RECORD_AUDIO",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "ACCESS_NETWORK_STATE",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
+      "adaptiveIcon": {
+        "backgroundColor": "#4AA0E6"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "현장 사진을 즉시 촬영해 입력에 첨부하기 위해 카메라를 사용합니다."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "갤러리의 이미지를 입력에 첨부하기 위해 사진 보관함에 접근합니다.",
+          "cameraPermission": "현장 사진을 즉시 촬영해 입력에 첨부하기 위해 카메라를 사용합니다."
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "말한 내용을 실시간으로 문자화하기 위해 마이크를 사용합니다.",
+          "speechRecognitionPermission": "말한 내용을 실시간으로 문자화해 검색하기 위해 음성 인식을 사용합니다."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "현재 위치의 날씨를 바로 알려드리기 위해 위치를 사용합니다."
+        }
+      ],
+      "expo-asset",
+      "expo-font",
+      "expo-status-bar"
+    ]
+  }
+}

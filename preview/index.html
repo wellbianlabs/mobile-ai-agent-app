@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Multimodal Composer — Preview</title>
+<style>
+  /* ── 디자인 토큰 (luxury dark) ── */
+  :root {
+    --bg-0: #08080A;
+    --bg-1: #0E0E12;
+    --ivory: #F2EFE9;
+    --muted: #8C8C95;
+    --faint: #5A5A63;
+    --gold: #C9A96A;
+    --gold-soft: rgba(201,169,106,.16);
+    --hair: rgba(255,255,255,.08);
+    --hair-strong: rgba(255,255,255,.14);
+    --glass: rgba(255,255,255,.035);
+    --glass-2: rgba(255,255,255,.06);
+    --danger: #D98A8A;
+    --serif: "Cormorant Garamond", "Didot", "Bodoni MT", "Hoefler Text", "Constantia", Garamond, "Times New Roman", serif;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; height: 100%; font-family: var(--sans); color: var(--ivory);
+    background: radial-gradient(1400px 900px at 50% -20%, #15151b, #060608 65%);
+    display: flex; align-items: center; justify-content: center;
+    -webkit-font-smoothing: antialiased;
+  }
+  .stage { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 28px; }
+  .caption { color: var(--faint); font-size: 12px; letter-spacing: .04em; font-weight: 300; }
+  svg { display: block; }
+
+  /* ── 폰 프레임 ── */
+  .phone {
+    width: 392px; height: 850px; background: #000; border-radius: 56px; padding: 11px;
+    box-shadow: 0 40px 100px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.06),
+                inset 0 0 0 2px #1b1b21;
+    position: relative;
+  }
+  .screen {
+    width: 100%; height: 100%; border-radius: 46px; overflow: hidden; position: relative;
+    background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    display: flex; flex-direction: column;
+  }
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 116px; height: 28px; background: #000;
+    border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; z-index: 30;
+  }
+
+  /* ── 상태바 ── */
+  .statusbar {
+    height: 52px; flex: none; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 30px; font-size: 13px; font-weight: 500; letter-spacing: .02em; z-index: 20;
+  }
+  .statusbar .icons { display: flex; gap: 7px; align-items: center; color: var(--ivory); opacity: .9; }
+
+  /* ── 본문 ── */
+  .content { flex: 1; overflow-y: auto; padding: 18px 26px 10px;
+    display: flex; align-items: center; justify-content: center; }
+  .content::-webkit-scrollbar { width: 0; }
+  .greeting { font-family: var(--serif); font-size: 34px; font-weight: 500;
+    letter-spacing: .01em; color: var(--ivory); }
+  .eyebrow {
+    font-size: 11px; letter-spacing: .42em; text-transform: uppercase;
+    color: var(--gold); font-weight: 500; margin-bottom: 10px;
+  }
+  .title {
+    font-family: var(--serif); font-weight: 600; font-size: 39px; line-height: 1.12;
+    letter-spacing: .005em; margin: 0 0 14px;
+  }
+  .title em { font-style: italic; color: var(--gold); }
+  .subtitle { color: var(--muted); font-size: 14px; line-height: 22px; font-weight: 300; margin: 0; max-width: 30ch; }
+
+  .divider { height: 1px; background: var(--hair); margin: 26px 0; }
+
+  /* 역량 칩 */
+  .caps { display: flex; flex-direction: column; gap: 0; }
+  .cap {
+    display: flex; align-items: center; gap: 14px; padding: 15px 2px;
+    border-bottom: 1px solid var(--hair);
+  }
+  .cap:last-child { border-bottom: none; }
+  .cap .ic { color: var(--ivory); opacity: .85; width: 22px; display: grid; place-items: center; }
+  .cap .tx { font-size: 14px; font-weight: 300; color: var(--ivory); }
+  .cap .tx b { font-weight: 500; }
+  .cap .tx span { color: var(--faint); }
+
+  /* 어시스턴트 인사 */
+  .assistant { display: flex; gap: 12px; align-items: flex-start; margin-top: 30px; }
+  .assistant .avatar {
+    width: 30px; height: 30px; border-radius: 50%; flex: none;
+    background: linear-gradient(145deg, var(--gold), #8a703f);
+    box-shadow: 0 0 0 1px var(--hair-strong);
+  }
+  .assistant .msg { color: var(--muted); font-size: 14px; line-height: 21px; font-weight: 300; padding-top: 4px; }
+
+  /* ── 컴포저 ── */
+  .composer {
+    flex: none; padding: 12px 16px 30px;
+    background: linear-gradient(180deg, rgba(8,8,10,0), rgba(8,8,10,.6) 22%);
+  }
+  .panel {
+    background: var(--glass); border: 1px solid var(--hair); border-radius: 26px;
+    padding: 8px; display: flex; flex-direction: column; gap: 8px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.4);
+  }
+
+  /* 음성 클립 */
+  .voice-chip { display: none; align-items: center; gap: 12px; padding: 10px 14px 10px 12px;
+    background: var(--glass-2); border: 1px solid var(--hair); border-radius: 18px; margin: 2px; }
+  .voice-chip.show { display: flex; }
+  .voice-chip .vic { color: var(--gold); flex: none; }
+  .voice-chip .wave { flex: 1; display: flex; align-items: center; gap: 3px; height: 26px; }
+  .voice-chip .wave i { flex: 1; background: linear-gradient(180deg, var(--gold), #9a7d4a);
+    border-radius: 2px; display: block; opacity: .9; }
+  .voice-chip .dur { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 400; }
+
+  /* 이미지 스트립 */
+  .img-strip { display: none; gap: 10px; overflow-x: auto; padding: 4px 2px; }
+  .img-strip.show { display: flex; }
+  .img-strip::-webkit-scrollbar { height: 0; }
+  .thumb { position: relative; width: 76px; height: 76px; flex: none; border-radius: 16px;
+    overflow: hidden; box-shadow: inset 0 0 0 1px var(--hair); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb .badge { position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(0deg, rgba(0,0,0,.6), transparent); color: rgba(255,255,255,.9);
+    font-size: 9px; font-weight: 400; letter-spacing: .03em; text-align: right; padding: 10px 7px 4px; }
+
+  .x-btn { border: none; cursor: pointer; display: grid; place-items: center; padding: 0;
+    background: rgba(0,0,0,.55); color: #fff; }
+  .thumb .x-btn { position: absolute; top: 5px; right: 5px; width: 22px; height: 22px; border-radius: 50%; }
+  .voice-chip .x-btn { width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,.07); color: var(--muted); flex: none; }
+
+  /* 텍스트 입력 */
+  .text-input { width: 100%; min-height: 30px; max-height: 120px; resize: none; border: none;
+    background: transparent; color: var(--ivory); font-family: var(--sans); font-size: 16px;
+    font-weight: 300; line-height: 24px; padding: 10px 14px 2px; outline: none; }
+  .text-input::placeholder { color: var(--faint); font-weight: 300; }
+  .notice { color: var(--danger); font-size: 12px; padding: 0 14px; min-height: 0; font-weight: 300; letter-spacing: .01em; }
+
+  /* 액션 바 */
+  .actions { display: flex; align-items: center; justify-content: space-between; padding: 2px 6px 4px; }
+  .attach-group { display: flex; gap: 4px; }
+  .right-group { display: flex; gap: 10px; align-items: center; }
+  .ghost-btn { width: 42px; height: 42px; border-radius: 50%; cursor: pointer; border: none;
+    background: transparent; color: var(--muted); display: grid; place-items: center; transition: .18s; }
+  .ghost-btn:hover { color: var(--ivory); background: var(--glass-2); }
+
+  /* 마이크 */
+  .mic-wrap { position: relative; width: 46px; height: 46px; display: grid; place-items: center; }
+  .mic-ring { position: absolute; width: 46px; height: 46px; border-radius: 50%;
+    background: var(--gold); opacity: 0; transform: scale(1);
+    transition: transform .08s linear, opacity .08s linear; pointer-events: none; }
+  .mic { width: 46px; height: 46px; border-radius: 50%; cursor: pointer; user-select: none;
+    background: transparent; color: var(--muted); display: grid; place-items: center;
+    position: relative; z-index: 2; transition: .18s; }
+  .mic:hover { color: var(--ivory); }
+  .mic.rec { background: var(--gold); color: #1a1306; box-shadow: 0 0 24px var(--gold-soft); }
+  .mic-hud { position: absolute; bottom: 58px; left: 50%; transform: translateX(-50%);
+    display: none; align-items: center; gap: 7px; white-space: nowrap;
+    background: rgba(20,20,24,.92); border: 1px solid var(--hair); border-radius: 999px;
+    padding: 5px 12px; font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 400; }
+  .mic-hud.show { display: flex; }
+  .mic-hud .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); animation: blink 1.1s infinite; }
+  @keyframes blink { 50% { opacity: .25; } }
+
+  /* 전송 */
+  .send { width: 46px; height: 46px; border-radius: 50%; cursor: pointer; border: none;
+    background: var(--glass-2); color: var(--faint); display: grid; place-items: center;
+    transition: .22s; }
+  .send.active { background: var(--gold); color: #1a1306; box-shadow: 0 6px 20px var(--gold-soft); }
+
+  /* ── 풀스크린 음성 검색 (YouTube/Google 스타일) ── */
+  .vs { position: absolute; inset: 0; z-index: 60; display: flex; flex-direction: column;
+    background: radial-gradient(130% 80% at 50% 118%, rgba(201,169,106,.14), transparent 58%), #060608;
+    opacity: 0; pointer-events: none; transform: translateY(10px); transition: opacity .32s ease, transform .32s ease; }
+  .vs.show { opacity: 1; pointer-events: auto; transform: none; }
+  .vs-top { padding: 50px 20px 0; display: flex; }
+  .vs-close { width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer;
+    background: var(--glass-2); color: var(--ivory); display: grid; place-items: center; }
+  .vs-body { flex: 1; padding: 28px 30px 0; }
+  .vs-text { font-size: 27px; line-height: 1.42; font-weight: 300; color: var(--ivory); letter-spacing: .005em; }
+  .vs-text.empty { color: var(--faint); }
+  .caret { display: inline-block; width: 2px; height: 26px; background: var(--gold);
+    margin-left: 3px; vertical-align: -4px; animation: blink .9s steps(1) infinite; }
+  .vs-foot { padding: 0 0 70px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+  .vs-eq { display: flex; align-items: center; gap: 6px; height: 44px; }
+  .vs-eq i { width: 6px; height: 12px; border-radius: 3px; display: block;
+    background: linear-gradient(180deg, var(--gold), #9a7d4a); animation: eq 1s ease-in-out infinite; }
+  .vs-eq i:nth-child(1){ animation-delay: 0s } .vs-eq i:nth-child(2){ animation-delay: .18s }
+  .vs-eq i:nth-child(3){ animation-delay: .36s } .vs-eq i:nth-child(4){ animation-delay: .18s }
+  .vs-eq i:nth-child(5){ animation-delay: .06s }
+  @keyframes eq { 0%,100% { height: 10px } 50% { height: 40px } }
+  .vs-mic { position: relative; width: 74px; height: 74px; border-radius: 50%;
+    background: var(--gold); color: #1a1306; display: grid; place-items: center; box-shadow: 0 0 44px var(--gold-soft); }
+  .vs-pulse { position: absolute; inset: 0; border-radius: 50%; animation: pulse 1.9s ease-out infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(201,169,106,.42) } 100% { box-shadow: 0 0 0 30px rgba(201,169,106,0) } }
+  .vs-hint { color: var(--faint); font-size: 13px; font-weight: 300; letter-spacing: .04em; }
+  .vs.searching .vs-eq { display: none }
+  .vs.searching .vs-pulse { animation: none }
+  .vs.searching .vs-mic-ic { display: none }
+  .vs-spin { display: none; width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid var(--gold-soft); border-top-color: var(--gold); animation: spin .8s linear infinite; }
+  .vs.searching .vs-spin { display: block }
+  @keyframes spin { to { transform: rotate(360deg) } }
+
+  /* ── 앱 내 카메라 촬영 모드 ── */
+  .cam { position: absolute; inset: 0; z-index: 62; display: flex; flex-direction: column;
+    background: #000; opacity: 0; pointer-events: none; transition: opacity .28s ease; }
+  .cam.show { opacity: 1; pointer-events: auto; }
+  .cam-feed { position: absolute; inset: 0; overflow: hidden; }
+  .cam-feed::before { content: ''; position: absolute; inset: -20%;
+    background:
+      radial-gradient(38% 30% at 30% 32%, #3c4350, transparent 60%),
+      radial-gradient(48% 40% at 72% 66%, #2c2720, transparent 60%),
+      linear-gradient(135deg, #181a1f, #0b0c0f);
+    animation: drift 9s ease-in-out infinite alternate; }
+  @keyframes drift { from { transform: translate(0,0) scale(1.06) } to { transform: translate(-4%,-3%) scale(1.13) } }
+  .cam-feed.flip::before { transform: scaleX(-1) scale(1.1); }
+  .cam-grid { position: absolute; inset: 0; pointer-events: none; opacity: .35;
+    background-image: linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px);
+    background-size: 33.33% 33.33%; background-position: center; }
+  .cam-focus { position: absolute; top: 46%; left: 50%; width: 116px; height: 116px;
+    transform: translate(-50%,-50%); border: 1px solid rgba(255,255,255,.55); border-radius: 6px; }
+  .cam-flash { position: absolute; inset: 0; background: #fff; opacity: 0; z-index: 4; pointer-events: none; }
+  .cam-flash.fire { animation: flash .34s ease-out; }
+  @keyframes flash { 0% { opacity: 0 } 12% { opacity: .92 } 100% { opacity: 0 } }
+  .cam-top { position: relative; z-index: 3; display: flex; justify-content: space-between; padding: 50px 22px 0; }
+  .cam-btn { width: 42px; height: 42px; border-radius: 50%; border: none; cursor: pointer;
+    background: rgba(0,0,0,.42); color: #fff; display: grid; place-items: center; }
+  .cam-hint { position: absolute; z-index: 3; bottom: 150px; left: 0; right: 0; text-align: center;
+    color: rgba(255,255,255,.66); font-size: 12px; font-weight: 300; letter-spacing: .03em; }
+  .cam-bottom { position: relative; z-index: 3; margin-top: auto; padding: 0 32px 54px;
+    display: flex; align-items: center; justify-content: space-between; }
+  .cam-thumb-mini { width: 46px; height: 46px; border-radius: 10px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,.4); background: rgba(255,255,255,.06); }
+  .cam-thumb-mini img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cam-shutter { width: 74px; height: 74px; border-radius: 50%; cursor: pointer;
+    background: #fff; border: 4px solid rgba(255,255,255,.45); box-shadow: 0 0 0 2px rgba(255,255,255,.22);
+    transition: transform .08s; }
+  .cam-shutter:active { transform: scale(.93); }
+  .cam-side { width: 46px; height: 46px; border-radius: 50%; border: none; cursor: pointer;
+    background: rgba(0,0,0,.42); color: #fff; display: grid; place-items: center; }
+
+  /* 토스트 */
+  .toast { position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%) translateY(10px);
+    background: rgba(20,20,24,.95); border: 1px solid var(--hair-strong); color: var(--ivory);
+    font-weight: 400; font-size: 13px; letter-spacing: .02em; padding: 11px 20px; border-radius: 999px;
+    opacity: 0; transition: all .28s; z-index: 40; display: flex; align-items: center; gap: 8px; }
+  .toast .ic { color: var(--gold); }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="phone">
+      <div class="screen">
+        <div class="notch"></div>
+
+        <div class="statusbar">
+          <span>9:41</span>
+          <span class="icons">
+            <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4.5" y="4" width="3" height="7" rx="1"/><rect x="9" y="2" width="3" height="9" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+            <svg width="24" height="12" viewBox="0 0 24 12" fill="none"><rect x="1" y="1" width="20" height="10" rx="3" stroke="currentColor" stroke-opacity=".5"/><rect x="3" y="3" width="15" height="6" rx="1.5" fill="currentColor"/><rect x="22" y="4" width="1.5" height="4" rx=".75" fill="currentColor" fill-opacity=".5"/></svg>
+          </span>
+        </div>
+
+        <div class="content">
+          <div class="greeting">안녕하세요</div>
+        </div>
+
+        <!-- 컴포저 -->
+        <div class="composer">
+          <div class="panel">
+            <div class="voice-chip" id="voiceChip">
+              <span class="vic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2"/></svg></span>
+              <div class="wave" id="voiceWave"></div>
+              <span class="dur" id="voiceDur">0:00</span>
+              <button class="x-btn" id="voiceRemove"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
+
+            <div class="img-strip" id="imgStrip"></div>
+
+            <textarea class="text-input" id="textInput" rows="1" placeholder="메시지를 입력하세요"></textarea>
+
+            <div class="notice" id="notice"></div>
+
+            <div class="actions">
+              <div class="attach-group">
+                <button class="ghost-btn" id="btnCamera" title="촬영">
+                  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L19 6h0a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>
+                </button>
+                <button class="ghost-btn" id="btnLibrary" title="갤러리">
+                  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg>
+                </button>
+              </div>
+              <div class="right-group">
+                <div class="mic-wrap">
+                  <div class="mic-hud" id="micHud"><span class="dot"></span><span id="micTime">0:00</span></div>
+                  <div class="mic-ring" id="micRing"></div>
+                  <div class="mic" id="mic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2"/><path d="M12 19v3"/></svg></div>
+                </div>
+                <button class="send" id="send"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="6 11 12 5 18 11"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 풀스크린 음성 검색 -->
+        <div class="vs" id="voiceSearch">
+          <div class="vs-top">
+            <button class="vs-close" id="vsClose" aria-label="닫기">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="vs-body">
+            <div class="vs-text empty" id="vsText">말씀하세요</div>
+          </div>
+          <div class="vs-foot">
+            <div class="vs-eq" id="vsEq"><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="vs-mic">
+              <div class="vs-pulse"></div>
+              <span class="vs-spin"></span>
+              <svg class="vs-mic-ic" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2"/><path d="M12 19v3"/></svg>
+            </div>
+            <div class="vs-hint" id="vsHint">듣고 있어요</div>
+          </div>
+        </div>
+
+        <!-- 앱 내 카메라 촬영 모드 -->
+        <div class="cam" id="cameraView">
+          <div class="cam-feed" id="camFeed"><div class="cam-grid"></div><div class="cam-focus"></div></div>
+          <div class="cam-flash" id="camFlash"></div>
+          <div class="cam-top">
+            <button class="cam-btn" id="camClose" aria-label="닫기">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <button class="cam-btn" id="camFlashBtn" aria-label="플래시">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>
+            </button>
+          </div>
+          <div class="cam-hint">피사체를 화면에 담고 촬영하세요</div>
+          <div class="cam-bottom">
+            <div class="cam-thumb-mini" id="camLast"></div>
+            <button class="cam-shutter" id="camShutter" aria-label="촬영"></button>
+            <button class="cam-side" id="camFlip" aria-label="카메라 전환">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 14.8-3.3L23 10"/><path d="M1 14l4.7 4.3A9 9 0 0 0 20.5 15"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="toast" id="toast"><span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>에이전트로 전송되었습니다</div>
+      </div>
+    </div>
+    <div class="caption">실제 RN 컴포넌트를 재현한 인터랙티브 목업 · 마이크를 길게 눌러보세요</div>
+  </div>
+
+<script>
+  const state = { text: '', voice: null, images: [] };
+  const MAX_IMAGES = 6;
+  const $ = (id) => document.getElementById(id);
+  const textInput = $('textInput'), send = $('send'), notice = $('notice');
+  const imgStrip = $('imgStrip'), voiceChip = $('voiceChip');
+  const X_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
+  function hasContent(){ return state.text.trim().length>0 || state.voice!==null || state.images.length>0; }
+  function refresh(){
+    send.classList.toggle('active', hasContent());
+    voiceChip.classList.toggle('show', state.voice!==null);
+    imgStrip.classList.toggle('show', state.images.length>0);
+  }
+  function setNotice(m){ notice.textContent = m || ''; }
+
+  textInput.addEventListener('input', () => {
+    state.text = textInput.value;
+    textInput.style.height='auto'; textInput.style.height = Math.min(120, textInput.scrollHeight)+'px';
+    setNotice(''); refresh();
+  });
+
+  // 고급 듀오톤 이미지 플레이스홀더 (글자 없음)
+  const duos = [
+    ['#2B2D33','#C9A96A'], ['#1C2530','#5B6B7A'], ['#2A2622','#8C7A66'],
+    ['#232830','#444B57'], ['#2E2A2E','#7A6E78'], ['#1E2422','#6E7E72']
+  ];
+  function svgThumb(i){
+    const [a,b] = duos[i % duos.length];
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="152" height="152">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>
+          <radialGradient id="h" cx="28%" cy="22%" r="85%"><stop offset="0" stop-color="rgba(255,255,255,0.22)"/><stop offset="1" stop-color="rgba(255,255,255,0)"/></radialGradient>
+          <radialGradient id="v" cx="50%" cy="115%" r="90%"><stop offset="0" stop-color="rgba(0,0,0,0.45)"/><stop offset="1" stop-color="rgba(0,0,0,0)"/></radialGradient>
+        </defs>
+        <rect width="152" height="152" fill="url(#g)"/>
+        <rect width="152" height="152" fill="url(#h)"/>
+        <rect width="152" height="152" fill="url(#v)"/>
+      </svg>`);
+  }
+  function addImage(source){
+    if (state.images.length>=MAX_IMAGES){ setNotice('이미지는 최대 '+MAX_IMAGES+'장까지 첨부할 수 있습니다.'); return; }
+    const i = state.images.length;
+    state.images.push({ uri: svgThumb(i), source, bytes: 180+((i*53)%220) });
+    renderImages(); setNotice(''); refresh();
+  }
+  function renderImages(){
+    imgStrip.innerHTML='';
+    state.images.forEach((img, idx) => {
+      const el = document.createElement('div'); el.className='thumb';
+      el.innerHTML = `<img src="${img.uri}"/><div class="badge">${img.bytes} KB</div><button class="x-btn">${X_SVG}</button>`;
+      el.querySelector('.x-btn').onclick = () => { state.images.splice(idx,1); renderImages(); refresh(); };
+      imgStrip.appendChild(el);
+    });
+  }
+  $('btnLibrary').onclick = () => addImage('library');
+
+  // ── 앱 내 카메라 촬영 모드 ──
+  // 사진 버튼 → 라이브 뷰파인더로 전환 → 셔터로 촬영 → 압축 후 첨부.
+  const cam=$('cameraView'), camFeed=$('camFeed'), camLast=$('camLast');
+  $('btnCamera').onclick = () => { cam.classList.add('show'); };
+  $('camClose').onclick = () => { cam.classList.remove('show'); };
+  $('camFlip').onclick = () => { camFeed.classList.toggle('flip'); };
+  $('camShutter').onclick = () => {
+    const f=$('camFlash'); f.classList.remove('fire'); void f.offsetWidth; f.classList.add('fire');
+    addImage('camera'); // 촬영 → (디바이스 압축) → 첨부
+    const last = state.images[state.images.length-1];
+    if (last) camLast.innerHTML = `<img src="${last.uri}"/>`;
+    setTimeout(() => cam.classList.remove('show'), 380); // 촬영 후 컴포저로 복귀
+  };
+
+  // 음성 (hold-to-talk)
+  const mic=$('mic'), micRing=$('micRing'), micHud=$('micHud'), micTime=$('micTime');
+  let recording=false, startTs=0, levelTimer=null, durTimer=null, samples=[];
+  function fmt(ms){ const t=Math.floor(ms/1000); return Math.floor(t/60)+':'+String(t%60).padStart(2,'0'); }
+  function startRec(){
+    if(recording) return;
+    recording=true; startTs=performance.now(); samples=[];
+    mic.classList.add('rec'); micHud.classList.add('show');
+    levelTimer=setInterval(()=>{ const l=0.15+Math.abs(Math.sin(performance.now()/120))*0.7*Math.random();
+      samples.push(l); micRing.style.transform='scale('+(1+l*0.8)+')'; micRing.style.opacity=(0.2+l*0.45).toFixed(2); },100);
+    durTimer=setInterval(()=>{ micTime.textContent=fmt(performance.now()-startTs); },100);
+  }
+  function stopRec(){
+    if(!recording) return; recording=false;
+    clearInterval(levelTimer); clearInterval(durTimer);
+    mic.classList.remove('rec'); micHud.classList.remove('show'); micRing.style.opacity=0; micRing.style.transform='scale(1)';
+    const dur=performance.now()-startTs; if(dur<350) return;
+    const bars=[], n=26, bucket=Math.ceil(samples.length/n);
+    for(let i=0;i<n;i++){ const s=samples.slice(i*bucket,(i+1)*bucket); bars.push(s.length? s.reduce((a,b)=>a+b,0)/s.length : 0.12); }
+    state.voice={ durationMs:dur, bars };
+    $('voiceWave').innerHTML = bars.map(h=>`<i style="height:${(4+h*20).toFixed(0)}px"></i>`).join('');
+    $('voiceDur').textContent = fmt(dur); refresh();
+  }
+  $('voiceRemove').onclick = () => { state.voice=null; refresh(); };
+
+  // ── 풀스크린 음성 검색 (YouTube 스타일) ──
+  // 마이크 탭 → 전체화면 → 실시간 문자화 → 무음 감지 시 자동 검색.
+  // (실기기에선 STT 라이브러리가 partial 결과를 주지만, 목업은 시뮬레이션)
+  const vs=$('voiceSearch'), vsText=$('vsText'), vsHint=$('vsHint');
+  let vsTimers=[];
+  const SAMPLE = ['근처에','분위기','좋은','브런치','카페','추천해줘'];
+  function clearVsTimers(){ vsTimers.forEach(clearTimeout); vsTimers=[]; }
+
+  function openVoiceSearch(){
+    clearVsTimers();
+    vs.classList.add('show'); vs.classList.remove('searching');
+    vsText.className='vs-text empty'; vsText.textContent='말씀하세요'; vsHint.textContent='듣고 있어요';
+    const acc=[];
+    vsTimers.push(setTimeout(()=>{ vsText.className='vs-text'; reveal(0); }, 700));
+    function reveal(i){
+      if(i>=SAMPLE.length){
+        vsText.innerHTML = acc.join(' '); // caret 제거
+        // 무음 1.3s → 자동 검색
+        vsTimers.push(setTimeout(()=>finishSearch(acc.join(' ')), 1300));
+        return;
+      }
+      acc.push(SAMPLE[i]);
+      vsText.innerHTML = acc.join(' ') + '<span class="caret"></span>';
+      vsTimers.push(setTimeout(()=>reveal(i+1), 300 + Math.random()*240));
+    }
+  }
+  function finishSearch(query){
+    vs.classList.add('searching'); vsHint.textContent='검색 중…';
+    vsTimers.push(setTimeout(()=>{
+      vs.classList.remove('show','searching');
+      const ti=$('textInput'); ti.value=query; ti.dispatchEvent(new Event('input'));
+      $('send').click(); // 자동으로 검색(전송)으로 넘어감
+    }, 950));
+  }
+  function cancelVoiceSearch(){ clearVsTimers(); vs.classList.remove('show','searching'); }
+
+  mic.addEventListener('click', openVoiceSearch);
+  $('vsClose').addEventListener('click', cancelVoiceSearch);
+
+  send.onclick = () => {
+    if(!hasContent()) return;
+    const t=$('toast'); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1700);
+    state.text=''; state.voice=null; state.images=[];
+    textInput.value=''; textInput.style.height='auto'; renderImages(); setNotice(''); refresh();
+  };
+  refresh();
+</script>
+</body>
+</html>
