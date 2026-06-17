@@ -23,6 +23,7 @@ SECRETS.local.md
 # Native
 *.orig.*
 *.jks
+*.keystore
 *.p8
 *.p12
 *.key

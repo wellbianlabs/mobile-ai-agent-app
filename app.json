@@ -6,7 +6,9 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#4AA0E6"
     },
@@ -30,14 +32,17 @@
         "READ_MEDIA_IMAGES",
         "ACCESS_NETWORK_STATE",
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "POST_NOTIFICATIONS"
       ],
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#4AA0E6"
       }
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       [
@@ -64,6 +69,12 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "현재 위치의 날씨를 바로 알려드리기 위해 위치를 사용합니다."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#2E86DE"
         }
       ],
       "expo-asset",
