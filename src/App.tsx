@@ -17,6 +17,7 @@ import { ComposerBar } from '@/components/ComposerBar';
 import { ConversationView } from '@/components/ConversationView';
 import { Onboarding } from '@/components/Onboarding';
 import { WeatherHero } from '@/components/WeatherHero';
+import { configureNotifications } from '@/services/notifications';
 import { useMultimodalStore } from '@/store/multimodalStore';
 import { sky } from '@/theme/tokens';
 
@@ -43,6 +44,7 @@ function AppInner() {
   const place = useMultimodalStore((s) => s.location?.place ?? null);
 
   useEffect(() => {
+    configureNotifications(); // 포그라운드 알림 배너 핸들러(아침 브리핑)
     AsyncStorage.getItem(ONBOARD_KEY)
       .then((v) => setOnboarded(v === '1'))
       .catch(() => setOnboarded(false));

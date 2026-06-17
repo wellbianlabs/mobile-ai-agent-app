@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   StyleSheet,
   Text,
@@ -11,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ComposerBar } from '@/components/ComposerBar';
 import { SkyBackground } from '@/components/SkyBackground';
 import { useLocationWeather } from '@/hooks/useLocationWeather';
+import { useMorningBriefing } from '@/hooks/useMorningBriefing';
 import { sky, spacing } from '@/theme/tokens';
 import { getSkyScene } from '@/utils/skyTheme';
 
@@ -21,8 +23,22 @@ import { getSkyScene } from '@/utils/skyTheme';
  */
 export function WeatherHero() {
   const { phase, place, summary, reload } = useLocationWeather();
+  const briefing = useMorningBriefing(summary, place);
 
   const loading = phase === 'idle' || phase === 'locating' || phase === 'loading';
+
+  const onToggleBriefing = async () => {
+    const on = await briefing.toggle();
+    if (on) {
+      Alert.alert('아침 브리핑 켜짐', '매일 오전 7:30에 오늘 날씨를 알려드릴게요.');
+    } else if (!briefing.enabled) {
+      // 켜기 시도가 실패한 경우(권한 거부/Expo Go 미지원)에만 안내.
+      Alert.alert(
+        '브리핑을 켤 수 없어요',
+        '알림 권한을 허용했는지 확인해 주세요. (개발 빌드에서 동작 — Expo Go는 알림 미지원)',
+      );
+    }
+  };
 
   const scene = getSkyScene(
     new Date().getHours(),
@@ -34,14 +50,24 @@ export function WeatherHero() {
   return (
     <SkyBackground scene={scene}>
       <SafeAreaView style={styles.fill}>
-        {/* 상단 칩 */}
+        {/* 상단 칩 + 아침 브리핑 토글 */}
         <View style={styles.top}>
           <View style={styles.chip}>
-            <Feather name={summary?.emoji ? 'cloud' : 'cloud'} size={15} color="#fff" />
+            <Feather name="cloud" size={15} color="#fff" />
             <Text style={styles.chipText}>
               {place ? `${place} 날씨` : '오늘 날씨 요약'}
             </Text>
           </View>
+          {briefing.ready && (
+            <Pressable
+              onPress={onToggleBriefing}
+              hitSlop={8}
+              style={[styles.bell, briefing.enabled && styles.bellOn]}
+              accessibilityLabel={briefing.enabled ? '아침 브리핑 끄기' : '아침 브리핑 켜기'}
+            >
+              <Feather name={briefing.enabled ? 'bell' : 'bell-off'} size={16} color="#fff" />
+            </Pressable>
+          )}
         </View>
 
         {/* 헤드라인 영역 */}
@@ -95,7 +121,24 @@ export function WeatherHero() {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  top: { paddingHorizontal: spacing.xl, paddingTop: spacing.lg },
+  top: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.lg,
+  },
+  bell: {
+    width: 38,
+    height: 38,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: sky.chip,
+    borderWidth: 1,
+    borderColor: sky.chipBorder,
+  },
+  bellOn: { backgroundColor: 'rgba(255,255,255,0.32)' },
   chip: {
     alignSelf: 'flex-start',
     flexDirection: 'row',
