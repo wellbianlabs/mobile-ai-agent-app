@@ -40,6 +40,12 @@ export interface ImageAsset {
   source: 'camera' | 'library';
 }
 
+/** 멀티턴 메모리용 직전 대화 메시지(텍스트만). 바이너리는 재전송하지 않음. */
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  text: string;
+}
+
 /** 사용자의 현재 위치 컨텍스트(권한 허용 시). */
 export interface LocationContext {
   /** 표시/검색용 지명(예: "강남구"). 역지오코딩 실패 시 null. */
@@ -59,6 +65,8 @@ export interface UnifiedPayload {
   locale?: string;
   /** 현재 위치(있으면). "날씨" 등 위치 기반 질의의 기본값으로 사용. */
   location?: LocationContext | null;
+  /** 직전 대화 맥락(텍스트만, 오래된→최신 순). 멀티턴 메모리. */
+  history?: ConversationMessage[];
 }
 
 // ---------------------------------------------------------------------------
@@ -107,6 +115,8 @@ export interface IMobileAgentUnifiedPayload {
       fileName: string;
     }>;
   };
+  /** 직전 대화 맥락(텍스트만, 오래된→최신 순). 멀티턴 메모리. 선택. */
+  history?: ConversationMessage[];
 }
 
 /** 백엔드 응답(에이전트 결과). 백엔드 AgentResponse 와 정렬. */

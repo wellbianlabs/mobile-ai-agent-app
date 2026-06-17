@@ -1,6 +1,12 @@
 import { create } from 'zustand';
 
-import type { ImageAsset, LocationContext, UnifiedPayload, VoiceClip } from '@/types/payload';
+import type {
+  ConversationMessage,
+  ImageAsset,
+  LocationContext,
+  UnifiedPayload,
+  VoiceClip,
+} from '@/types/payload';
 
 /**
  * 입력 수단별 로컬 상태를 독립적으로 제어하는 단일 스토어.
@@ -75,6 +81,26 @@ interface MultimodalState {
 /** 한 디바이스가 한 번에 첨부할 수 있는 이미지 상한(과도한 페이로드 방지). */
 export const MAX_IMAGES = 6;
 
+/** 멀티턴 메모리로 보낼 직전 대화 턴 상한(컨텍스트/비용 보호). */
+const MAX_HISTORY_TURNS = 6;
+
+/** 완료된 대화 턴들 → 백엔드로 보낼 history(텍스트만). 첨부는 표식으로 남긴다. */
+function buildHistory(turns: ConversationTurn[]): ConversationMessage[] {
+  const recent = turns.filter((t) => t.status === 'done' && t.answer).slice(-MAX_HISTORY_TURNS);
+  const history: ConversationMessage[] = [];
+  for (const turn of recent) {
+    const marks: string[] = [];
+    if (turn.imageCount > 0) marks.push(`이미지 ${turn.imageCount}장 첨부`);
+    if (turn.hasVoice) marks.push('음성 첨부');
+    let question = turn.question?.trim() ?? '';
+    if (marks.length) question = question ? `${question} (${marks.join(', ')})` : `(${marks.join(', ')})`;
+    if (!question) question = '(첨부만 전송)';
+    history.push({ role: 'user', text: question });
+    history.push({ role: 'assistant', text: turn.answer as string });
+  }
+  return history;
+}
+
 export const useMultimodalStore = create<MultimodalState>((set, get) => ({
   text: '',
   voice: null,
@@ -124,13 +150,14 @@ export const useMultimodalStore = create<MultimodalState>((set, get) => ({
     }),
 
   buildPayload: () => {
-    const { text, voice, images, location } = get();
+    const { text, voice, images, location, turns } = get();
     return {
       text: text.trim(),
       voice,
       images,
       clientTimestamp: Date.now(),
       location,
+      history: buildHistory(turns),
     };
   },
 

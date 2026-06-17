@@ -108,6 +108,7 @@ export function toWirePayload(
         fileName: imageNames[i],
       })),
     },
+    ...(payload.history && payload.history.length > 0 ? { history: payload.history } : {}),
   };
 
   return { wire, imageNames };
