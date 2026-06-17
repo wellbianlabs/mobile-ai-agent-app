@@ -11,6 +11,7 @@ import {
 
 import { useMultimodalStore, type ConversationTurn } from '@/store/multimodalStore';
 import { radius, sky, spacing } from '@/theme/tokens';
+import { Markdown } from './Markdown';
 
 /**
  * 비서와의 대화 로그(라이트 테마). 사용자/비서 말풍선을 시간순으로 보여준다.
@@ -64,7 +65,7 @@ function Turn({ turn }: { turn: ConversationTurn }) {
           {turn.status === 'error' && <Text style={styles.errorText}>⚠ {turn.error}</Text>}
           {turn.status === 'done' && (
             <>
-              <Text style={styles.agentText}>{turn.answer}</Text>
+              <Markdown text={turn.answer} />
               {!!turn.toolsUsed?.length && (
                 <View style={styles.attachRow}>
                   {turn.toolsUsed.map((t) => (
@@ -154,8 +155,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 1,
   },
-  agentText: { color: sky.ink, fontSize: 15, lineHeight: 23 },
-
   pending: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   pendingText: { color: sky.inkMuted, fontSize: 14 },
   errorText: { color: sky.warn, fontSize: 14 },
