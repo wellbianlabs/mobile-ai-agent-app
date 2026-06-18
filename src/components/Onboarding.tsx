@@ -59,10 +59,10 @@ export function Onboarding({ onDone }: Props) {
           <View style={styles.badge}>
             <Feather name="cloud" size={26} color="#fff" />
           </View>
-          <Text style={styles.eyebrow}>WELLBIAN AI</Text>
-          <Text style={styles.title}>날씨를{'\n'}전략자산으로</Text>
+          <Text style={styles.eyebrow}>WELLBIAN AI · KWEATHER</Text>
+          <Text style={styles.title}>날씨를 비즈니스의{'\n'}전략 자산으로</Text>
           <Text style={styles.subtitle}>
-            날씨를 전략자산으로 만드는 날씨 AI 에이전트.{'\n'}더 똑똑하게 도와드리기 위해 아래 권한이 필요해요 — 동의는 한 번만.
+            케이웨더 기반 날씨 AI 에이전트가 날씨를 사업의 의사결정 자산으로 바꿔드려요.{'\n'}정확한 위치 분석을 위해 아래 권한이 필요해요 — 동의는 한 번만.
           </Text>
 
           <View style={styles.list}>
