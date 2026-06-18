@@ -44,7 +44,7 @@ function AppInner() {
   const place = useMultimodalStore((s) => s.location?.place ?? null);
 
   useEffect(() => {
-    configureNotifications(); // 포그라운드 알림 배너 핸들러(아침 브리핑)
+    void configureNotifications(); // 포그라운드 알림 배너 핸들러(아침 브리핑, Expo Go 면 no-op)
     AsyncStorage.getItem(ONBOARD_KEY)
       .then((v) => setOnboarded(v === '1'))
       .catch(() => setOnboarded(false));
