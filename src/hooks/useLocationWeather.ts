@@ -7,6 +7,7 @@ import {
   conditionEmoji,
   summarizeWeather,
   wmoEmoji,
+  type DayPoint,
   type HourPoint,
   type OpenMeteoResponse,
   type WeatherSummary,
@@ -20,6 +21,7 @@ interface BackendWeather {
   summary?: { headline: string; advice: string; condition: string; tempC: number; emoji: string; isDay: boolean };
   current?: { raining?: boolean };
   hourly?: Array<{ time: string; tempC: number; popPct: number | null; condition: string; isDay: boolean }>;
+  daily?: Array<{ date: string; maxC: number | null; minC: number | null; popPct: number | null; condition: string }>;
 }
 
 export type WeatherSource = 'KWeather' | 'Open-Meteo';
@@ -28,7 +30,13 @@ async function fetchFromBackend(
   lat: number,
   lon: number,
   place: string | null,
-): Promise<{ place: string | null; summary: WeatherSummary; hourly: HourPoint[]; source: WeatherSource | null } | null> {
+): Promise<{
+  place: string | null;
+  summary: WeatherSummary;
+  hourly: HourPoint[];
+  daily: DayPoint[];
+  source: WeatherSource | null;
+} | null> {
   try {
     const url =
       `${WEATHER_ENDPOINT}?lat=${lat}&lon=${lon}` + (place ? `&place=${encodeURIComponent(place)}` : '');
@@ -45,9 +53,17 @@ async function fetchFromBackend(
       popPct: h.popPct,
       emoji: conditionEmoji(h.condition, h.isDay),
     }));
+    const daily: DayPoint[] = (d.daily ?? []).map((day) => ({
+      date: day.date,
+      maxC: day.maxC,
+      minC: day.minC,
+      popPct: day.popPct,
+      emoji: conditionEmoji(day.condition, true),
+    }));
     return {
       place: d.place ?? place,
       hourly,
+      daily,
       source: d.source ?? null,
       summary: {
         headline: d.summary.headline,
@@ -93,6 +109,29 @@ function hourlyFromOpenMeteo(data: OpenMeteoResponse, maxHours = 24): HourPoint[
   return out;
 }
 
+/** Open-Meteo 폴백 응답 → 주간(일별). */
+function dailyFromOpenMeteo(data: OpenMeteoResponse): DayPoint[] {
+  const d = data.daily ?? {};
+  const dates = d.time ?? [];
+  const maxs = d.temperature_2m_max ?? [];
+  const mins = d.temperature_2m_min ?? [];
+  const pops = d.precipitation_probability_max ?? [];
+  const codes = d.weather_code ?? [];
+  const out: DayPoint[] = [];
+  for (let i = 0; i < dates.length; i++) {
+    const date = dates[i];
+    if (!date) continue;
+    out.push({
+      date,
+      maxC: typeof maxs[i] === 'number' ? Math.round(maxs[i] as number) : null,
+      minC: typeof mins[i] === 'number' ? Math.round(mins[i] as number) : null,
+      popPct: typeof pops[i] === 'number' ? (pops[i] as number) : null,
+      emoji: wmoEmoji(codes[i], true),
+    });
+  }
+  return out;
+}
+
 export type WeatherPhase = 'idle' | 'locating' | 'loading' | 'ready' | 'denied' | 'error';
 
 export interface LocationWeather {
@@ -102,6 +141,8 @@ export interface LocationWeather {
   summary: WeatherSummary | null;
   /** 시간별 예보(현재 시각부터). 없으면 빈 배열. */
   hourly: HourPoint[];
+  /** 주간(일별) 예보. 없으면 빈 배열. */
+  daily: DayPoint[];
   /** 데이터 출처(케이웨더/Open-Meteo). */
   source: WeatherSource | null;
   error: string | null;
@@ -132,7 +173,7 @@ async function fetchWeather(lat: number, lon: number): Promise<OpenMeteoResponse
   url.searchParams.set('hourly', 'precipitation_probability,precipitation,weather_code,temperature_2m');
   url.searchParams.set('daily', 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max');
   url.searchParams.set('timezone', 'auto');
-  url.searchParams.set('forecast_days', '2');
+  url.searchParams.set('forecast_days', '7');
 
   const res = await fetch(url.toString());
   if (!res.ok) throw new Error(`날씨 조회 실패 (HTTP ${res.status})`);
@@ -149,6 +190,7 @@ export function useLocationWeather(): LocationWeather {
   const [place, setPlace] = useState<string | null>(null);
   const [summary, setSummary] = useState<WeatherSummary | null>(null);
   const [hourly, setHourly] = useState<HourPoint[]>([]);
+  const [daily, setDaily] = useState<DayPoint[]>([]);
   const [source, setSource] = useState<WeatherSource | null>(null);
   const [error, setError] = useState<string | null>(null);
   const setLocation = useMultimodalStore((s) => s.setLocation);
@@ -190,6 +232,7 @@ export function useLocationWeather(): LocationWeather {
           if (fromBackend.place) setPlace(fromBackend.place);
           setSummary(fromBackend.summary);
           setHourly(fromBackend.hourly);
+          setDaily(fromBackend.daily);
           setSource(fromBackend.source);
           setPhase('ready');
           return;
@@ -198,6 +241,7 @@ export function useLocationWeather(): LocationWeather {
         const data = await fetchWeather(latitude, longitude);
         setSummary(summarizeWeather(data));
         setHourly(hourlyFromOpenMeteo(data));
+        setDaily(dailyFromOpenMeteo(data));
         setSource('Open-Meteo');
         setPhase('ready');
       } catch (e) {
@@ -217,5 +261,5 @@ export function useLocationWeather(): LocationWeather {
     run(true);
   }, [run]);
 
-  return { phase, place, summary, hourly, source, error, reload };
+  return { phase, place, summary, hourly, daily, source, error, reload };
 }

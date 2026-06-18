@@ -30,6 +30,16 @@ export interface OpenMeteoResponse {
   };
 }
 
+/** 주간(일별) 예보 한 칸. */
+export interface DayPoint {
+  /** 로컬 날짜(YYYY-MM-DD). */
+  date: string;
+  maxC: number | null;
+  minC: number | null;
+  popPct: number | null;
+  emoji: string;
+}
+
 /** 시간별 예보 한 칸(스트립 표시용). */
 export interface HourPoint {
   /** 로컬 ISO 시각("2026-06-18T15:00"). */

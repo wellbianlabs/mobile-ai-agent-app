@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   AppState,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -14,6 +15,7 @@ import { BriefingSettings } from '@/components/BriefingSettings';
 import { ComposerBar } from '@/components/ComposerBar';
 import { HourlyStrip } from '@/components/HourlyStrip';
 import { SkyBackground } from '@/components/SkyBackground';
+import { WeeklyForecast } from '@/components/WeeklyForecast';
 import { useLocationWeather } from '@/hooks/useLocationWeather';
 import { useMorningBriefing } from '@/hooks/useMorningBriefing';
 import { sky, spacing } from '@/theme/tokens';
@@ -44,7 +46,7 @@ const SOURCE_LABEL = '케이웨더(KWeather)';
  * 하단의 입력 바로 무엇이든 물어볼 수 있다.
  */
 export function WeatherHero() {
-  const { phase, place, summary, hourly, source, reload } = useLocationWeather();
+  const { phase, place, summary, hourly, daily, source, reload } = useLocationWeather();
   const briefing = useMorningBriefing(summary, place);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [briefingHint, setBriefingHint] = useState<string | null>(null);
@@ -109,6 +111,12 @@ export function WeatherHero() {
           )}
         </View>
 
+        <ScrollView
+          style={styles.fill}
+          contentContainerStyle={styles.scrollBody}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
         {/* 헤드라인 영역 */}
         <View style={styles.hero}>
           {/* 현재 시각 */}
@@ -170,6 +178,14 @@ export function WeatherHero() {
           </View>
         )}
 
+        {/* 주간 예보 */}
+        {phase === 'ready' && daily.length > 0 && (
+          <View style={styles.weekly}>
+            <WeeklyForecast data={daily} />
+          </View>
+        )}
+        </ScrollView>
+
         {/* 입력 바 */}
         <ComposerBar />
       </SafeAreaView>
@@ -227,7 +243,9 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   chipText: { color: '#fff', fontSize: 13.5, fontWeight: '600', ...TEXT_SHADOW },
-  hero: { flex: 1, justifyContent: 'flex-start', paddingHorizontal: spacing.xl, paddingTop: spacing.lg },
+  scrollBody: { paddingBottom: spacing.lg },
+  hero: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm, paddingBottom: spacing.lg },
+  weekly: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },
 
   clock: { marginBottom: spacing.md },
   clockTime: {
