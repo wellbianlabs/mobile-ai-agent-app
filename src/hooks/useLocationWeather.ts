@@ -22,6 +22,8 @@ interface BackendWeather {
   current?: { raining?: boolean };
   hourly?: Array<{ time: string; tempC: number; popPct: number | null; condition: string; isDay: boolean }>;
   daily?: Array<{ date: string; maxC: number | null; minC: number | null; popPct: number | null; condition: string }>;
+  monthly?: Array<{ date: string; maxC: number | null; minC: number | null; popPct: number | null; condition: string }>;
+  monthlyRegion?: string | null;
 }
 
 export type WeatherSource = 'KWeather' | 'Open-Meteo';
@@ -35,6 +37,8 @@ async function fetchFromBackend(
   summary: WeatherSummary;
   hourly: HourPoint[];
   daily: DayPoint[];
+  monthly: DayPoint[];
+  monthlyRegion: string | null;
   source: WeatherSource | null;
 } | null> {
   try {
@@ -53,17 +57,21 @@ async function fetchFromBackend(
       popPct: h.popPct,
       emoji: conditionEmoji(h.condition, h.isDay),
     }));
-    const daily: DayPoint[] = (d.daily ?? []).map((day) => ({
+    const toDay = (day: { date: string; maxC: number | null; minC: number | null; popPct: number | null; condition: string }): DayPoint => ({
       date: day.date,
       maxC: day.maxC,
       minC: day.minC,
       popPct: day.popPct,
       emoji: conditionEmoji(day.condition, true),
-    }));
+    });
+    const daily: DayPoint[] = (d.daily ?? []).map(toDay);
+    const monthly: DayPoint[] = (d.monthly ?? []).map(toDay);
     return {
       place: d.place ?? place,
       hourly,
       daily,
+      monthly,
+      monthlyRegion: d.monthlyRegion ?? null,
       source: d.source ?? null,
       summary: {
         headline: d.summary.headline,
@@ -143,6 +151,10 @@ export interface LocationWeather {
   hourly: HourPoint[];
   /** 주간(일별) 예보. 없으면 빈 배열. */
   daily: DayPoint[];
+  /** 30일 장기전망(국내만). 없으면 빈 배열. */
+  monthly: DayPoint[];
+  /** 30일 전망 권역명(예: "수도권"). 해외/미지원 시 null. */
+  monthlyRegion: string | null;
   /** 데이터 출처(케이웨더/Open-Meteo). */
   source: WeatherSource | null;
   error: string | null;
@@ -191,6 +203,8 @@ export function useLocationWeather(): LocationWeather {
   const [summary, setSummary] = useState<WeatherSummary | null>(null);
   const [hourly, setHourly] = useState<HourPoint[]>([]);
   const [daily, setDaily] = useState<DayPoint[]>([]);
+  const [monthly, setMonthly] = useState<DayPoint[]>([]);
+  const [monthlyRegion, setMonthlyRegion] = useState<string | null>(null);
   const [source, setSource] = useState<WeatherSource | null>(null);
   const [error, setError] = useState<string | null>(null);
   const setLocation = useMultimodalStore((s) => s.setLocation);
@@ -233,15 +247,19 @@ export function useLocationWeather(): LocationWeather {
           setSummary(fromBackend.summary);
           setHourly(fromBackend.hourly);
           setDaily(fromBackend.daily);
+          setMonthly(fromBackend.monthly);
+          setMonthlyRegion(fromBackend.monthlyRegion);
           setSource(fromBackend.source);
           setPhase('ready');
           return;
         }
-        // 2) 폴백 — 클라이언트 Open-Meteo(백엔드 미연결/실패 시).
+        // 2) 폴백 — 클라이언트 Open-Meteo(백엔드 미연결/실패 시). 30일은 국내 케이웨더만 → 없음.
         const data = await fetchWeather(latitude, longitude);
         setSummary(summarizeWeather(data));
         setHourly(hourlyFromOpenMeteo(data));
         setDaily(dailyFromOpenMeteo(data));
+        setMonthly([]);
+        setMonthlyRegion(null);
         setSource('Open-Meteo');
         setPhase('ready');
       } catch (e) {
@@ -261,5 +279,5 @@ export function useLocationWeather(): LocationWeather {
     run(true);
   }, [run]);
 
-  return { phase, place, summary, hourly, daily, source, error, reload };
+  return { phase, place, summary, hourly, daily, monthly, monthlyRegion, source, error, reload };
 }

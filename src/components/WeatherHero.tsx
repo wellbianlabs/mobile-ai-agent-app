@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BriefingSettings } from '@/components/BriefingSettings';
 import { ComposerBar } from '@/components/ComposerBar';
 import { HourlyStrip } from '@/components/HourlyStrip';
+import { Monthly30 } from '@/components/Monthly30';
 import { SkyBackground } from '@/components/SkyBackground';
 import { WeeklyForecast } from '@/components/WeeklyForecast';
 import { useLocationWeather } from '@/hooks/useLocationWeather';
@@ -46,7 +47,8 @@ const SOURCE_LABEL = '케이웨더(KWeather)';
  * 하단의 입력 바로 무엇이든 물어볼 수 있다.
  */
 export function WeatherHero() {
-  const { phase, place, summary, hourly, daily, source, reload } = useLocationWeather();
+  const { phase, place, summary, hourly, daily, monthly, monthlyRegion, source, reload } =
+    useLocationWeather();
   const briefing = useMorningBriefing(summary, place);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [briefingHint, setBriefingHint] = useState<string | null>(null);
@@ -182,6 +184,13 @@ export function WeatherHero() {
         {phase === 'ready' && daily.length > 0 && (
           <View style={styles.weekly}>
             <WeeklyForecast data={daily} />
+          </View>
+        )}
+
+        {/* 30일 장기전망(국내만) */}
+        {phase === 'ready' && monthly.length > 0 && (
+          <View style={styles.weekly}>
+            <Monthly30 data={monthly} region={monthlyRegion} />
           </View>
         )}
         </ScrollView>
