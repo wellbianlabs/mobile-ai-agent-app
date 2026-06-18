@@ -1,12 +1,18 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { sky, spacing } from '@/theme/tokens';
+import { spacing } from '@/theme/tokens';
 import type { HourPoint } from '@/utils/weatherSummary';
 
 /**
- * 시간별 예보 가로 스트립 — 히어로(하늘 배경) 위에 유리 칩으로 표시.
+ * 시간별 예보 가로 스트립 — 히어로(하늘 배경) 위에 칩으로 표시.
  * 첫 칸은 "지금", 이후 "HH시". 강수확률이 있으면 하단에 표기.
  */
+
+const SHADOW = {
+  textShadowColor: 'rgba(0,0,0,0.35)',
+  textShadowOffset: { width: 0, height: 1 },
+  textShadowRadius: 6,
+} as const;
 
 function hourLabel(iso: string, index: number): string {
   if (index === 0) return '지금';
@@ -48,14 +54,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     borderRadius: 18,
-    backgroundColor: sky.glass,
+    backgroundColor: 'rgba(20,40,70,0.28)',
     borderWidth: 1,
-    borderColor: sky.chipBorder,
+    borderColor: 'rgba(255,255,255,0.28)',
     minWidth: 60,
   },
-  cellNow: { backgroundColor: 'rgba(255,255,255,0.30)' },
-  time: { color: '#fff', fontSize: 12.5, fontWeight: '600' },
+  cellNow: { backgroundColor: 'rgba(20,40,70,0.5)', borderColor: 'rgba(255,255,255,0.5)' },
+  time: { color: '#fff', fontSize: 12.5, fontWeight: '600', ...SHADOW },
   emoji: { fontSize: 20 },
-  temp: { color: '#fff', fontSize: 15, fontWeight: '700' },
-  pop: { color: sky.heroAccent, fontSize: 11, fontWeight: '600' },
+  temp: { color: '#fff', fontSize: 15, fontWeight: '700', ...SHADOW },
+  pop: { color: '#CFE7FB', fontSize: 11, fontWeight: '700', ...SHADOW },
 });

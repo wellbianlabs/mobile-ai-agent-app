@@ -181,6 +181,13 @@ export function WeatherHero() {
   );
 }
 
+/** 배경 이미지 위 흰 글자 가독성용 그림자. */
+const TEXT_SHADOW = {
+  textShadowColor: 'rgba(0,0,0,0.35)',
+  textShadowOffset: { width: 0, height: 1 },
+  textShadowRadius: 8,
+} as const;
+
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   top: {
@@ -213,7 +220,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: 7,
   },
-  chipText: { color: '#fff', fontSize: 13.5, fontWeight: '600' },
+  chipText: { color: '#fff', fontSize: 13.5, fontWeight: '600', ...TEXT_SHADOW },
   hero: { flex: 1, justifyContent: 'flex-start', paddingHorizontal: spacing.xl, paddingTop: spacing.lg },
 
   clock: { marginBottom: spacing.lg },
@@ -223,13 +230,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: -0.5,
     fontVariant: ['tabular-nums'],
+    ...TEXT_SHADOW,
   },
-  clockDate: { color: sky.heroDim, fontSize: 14, fontWeight: '500', marginTop: 2 },
+  clockDate: { color: '#fff', opacity: 0.9, fontSize: 14, fontWeight: '500', marginTop: 2, ...TEXT_SHADOW },
 
   sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: spacing.md },
-  sourceText: { color: sky.heroDim, fontSize: 12, fontWeight: '500' },
+  sourceText: { color: '#fff', opacity: 0.9, fontSize: 12, fontWeight: '500', ...TEXT_SHADOW },
   loadingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.xl },
-  loadingText: { color: sky.heroDim, fontSize: 15 },
+  loadingText: { color: '#fff', fontSize: 15, ...TEXT_SHADOW },
   headline: {
     color: sky.heroText,
     fontFamily: 'serif',
@@ -237,17 +245,19 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     lineHeight: 52,
     letterSpacing: -0.6,
+    ...TEXT_SHADOW,
   },
   advice: {
-    color: sky.heroAccent,
+    color: '#fff',
     fontFamily: 'serif',
     fontSize: 34,
     fontWeight: '600',
     lineHeight: 44,
     letterSpacing: -0.4,
     marginTop: spacing.lg,
+    ...TEXT_SHADOW,
   },
-  temp: { color: sky.heroDim, fontSize: 16, marginTop: spacing.xl, fontWeight: '500' },
+  temp: { color: '#fff', opacity: 0.95, fontSize: 16, marginTop: spacing.xl, fontWeight: '500', ...TEXT_SHADOW },
   hourly: { paddingBottom: spacing.md },
   permBtn: {
     alignSelf: 'flex-start',
