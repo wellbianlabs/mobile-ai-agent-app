@@ -17,9 +17,11 @@ import { HourlyStrip } from '@/components/HourlyStrip';
 import { IndustryPicker } from '@/components/IndustryPicker';
 import { Monthly30 } from '@/components/Monthly30';
 import { SkyBackground } from '@/components/SkyBackground';
+import { StrategyBriefing } from '@/components/StrategyBriefing';
 import { WeeklyForecast } from '@/components/WeeklyForecast';
 import { useLocationWeather } from '@/hooks/useLocationWeather';
 import { useMorningBriefing } from '@/hooks/useMorningBriefing';
+import { useSendMessage } from '@/hooks/useSendMessage';
 import { useMultimodalStore } from '@/store/multimodalStore';
 import { sky, spacing } from '@/theme/tokens';
 import { getIndustry } from '@/utils/industries';
@@ -60,7 +62,7 @@ export function WeatherHero() {
 
   const industryId = useMultimodalStore((s) => s.industry);
   const setIndustry = useMultimodalStore((s) => s.setIndustry);
-  const setText = useMultimodalStore((s) => s.setText);
+  const { send, sending } = useSendMessage();
   const industry = getIndustry(industryId);
 
   // 현재 시각 — 매 분 갱신(다음 분 경계에 맞춰 정렬) + 앱 재활성화 시 즉시 새로고침.
@@ -182,6 +184,13 @@ export function WeatherHero() {
           )}
         </View>
 
+        {/* 능동 전략 브리핑(묻기 전 먼저 제시) */}
+        {phase === 'ready' && (
+          <View style={styles.weekly}>
+            <StrategyBriefing />
+          </View>
+        )}
+
         {/* 시간별 예보 스트립 */}
         {phase === 'ready' && hourly.length > 0 && (
           <View style={styles.hourly}>
@@ -218,7 +227,12 @@ export function WeatherHero() {
             <Feather name="chevron-down" size={13} color="#fff" />
           </Pressable>
           {industry.presets.map((q) => (
-            <Pressable key={q} style={styles.presetChip} onPress={() => setText(q)}>
+            <Pressable
+              key={q}
+              style={[styles.presetChip, sending && styles.presetChipDim]}
+              disabled={sending}
+              onPress={() => void send(q)}
+            >
               <Text style={styles.presetText}>{q}</Text>
             </Pressable>
           ))}
@@ -313,6 +327,7 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   presetText: { color: sky.ink, fontSize: 13, fontWeight: '500' },
+  presetChipDim: { opacity: 0.5 },
 
   clock: { marginBottom: spacing.md },
   clockTime: {
