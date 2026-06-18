@@ -4,7 +4,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { AGENT_ACCESS_TOKEN, WEATHER_ENDPOINT } from '@/api/agentClient';
 import { useMultimodalStore } from '@/store/multimodalStore';
 import {
+  conditionEmoji,
   summarizeWeather,
+  wmoEmoji,
+  type HourPoint,
   type OpenMeteoResponse,
   type WeatherSummary,
 } from '@/utils/weatherSummary';
@@ -16,13 +19,14 @@ interface BackendWeather {
   source?: 'KWeather' | 'Open-Meteo';
   summary?: { headline: string; advice: string; condition: string; tempC: number; emoji: string; isDay: boolean };
   current?: { raining?: boolean };
+  hourly?: Array<{ time: string; tempC: number; popPct: number | null; condition: string; isDay: boolean }>;
 }
 
 async function fetchFromBackend(
   lat: number,
   lon: number,
   place: string | null,
-): Promise<{ place: string | null; summary: WeatherSummary } | null> {
+): Promise<{ place: string | null; summary: WeatherSummary; hourly: HourPoint[] } | null> {
   try {
     const url =
       `${WEATHER_ENDPOINT}?lat=${lat}&lon=${lon}` + (place ? `&place=${encodeURIComponent(place)}` : '');
@@ -33,8 +37,15 @@ async function fetchFromBackend(
     const d = (await res.json()) as BackendWeather;
     if (!d.ok || !d.summary) return null;
     const cond = d.summary.condition ?? '';
+    const hourly: HourPoint[] = (d.hourly ?? []).map((h) => ({
+      time: h.time,
+      tempC: h.tempC,
+      popPct: h.popPct,
+      emoji: conditionEmoji(h.condition, h.isDay),
+    }));
     return {
       place: d.place ?? place,
+      hourly,
       summary: {
         headline: d.summary.headline,
         advice: d.summary.advice,
@@ -52,6 +63,33 @@ async function fetchFromBackend(
   }
 }
 
+/** Open-Meteo 폴백 응답 → 시간별(현재 시각부터 maxHours개). */
+function hourlyFromOpenMeteo(data: OpenMeteoResponse, maxHours = 24): HourPoint[] {
+  const h = data.hourly ?? {};
+  const times = h.time ?? [];
+  const temps = h.temperature_2m ?? [];
+  const pops = h.precipitation_probability ?? [];
+  const codes = h.weather_code ?? [];
+  const cutoffHour = (data.current?.time ?? times[0] ?? '').slice(0, 13);
+
+  const out: HourPoint[] = [];
+  for (let i = 0; i < times.length && out.length < maxHours; i++) {
+    const t = times[i];
+    const temp = temps[i];
+    if (!t || t.slice(0, 13) < cutoffHour) continue;
+    if (typeof temp !== 'number') continue;
+    const hour = Number(t.slice(11, 13));
+    const isDay = hour >= 6 && hour < 19;
+    out.push({
+      time: t,
+      tempC: Math.round(temp),
+      popPct: typeof pops[i] === 'number' ? (pops[i] as number) : null,
+      emoji: wmoEmoji(codes[i], isDay),
+    });
+  }
+  return out;
+}
+
 export type WeatherPhase = 'idle' | 'locating' | 'loading' | 'ready' | 'denied' | 'error';
 
 export interface LocationWeather {
@@ -59,6 +97,8 @@ export interface LocationWeather {
   /** 표시용 지명(예: "강남구"). */
   place: string | null;
   summary: WeatherSummary | null;
+  /** 시간별 예보(현재 시각부터). 없으면 빈 배열. */
+  hourly: HourPoint[];
   error: string | null;
   /** 위치 권한 재요청 + 새로고침. */
   reload: () => void;
@@ -103,6 +143,7 @@ export function useLocationWeather(): LocationWeather {
   const [phase, setPhase] = useState<WeatherPhase>('idle');
   const [place, setPlace] = useState<string | null>(null);
   const [summary, setSummary] = useState<WeatherSummary | null>(null);
+  const [hourly, setHourly] = useState<HourPoint[]>([]);
   const [error, setError] = useState<string | null>(null);
   const setLocation = useMultimodalStore((s) => s.setLocation);
 
@@ -142,12 +183,14 @@ export function useLocationWeather(): LocationWeather {
         if (fromBackend) {
           if (fromBackend.place) setPlace(fromBackend.place);
           setSummary(fromBackend.summary);
+          setHourly(fromBackend.hourly);
           setPhase('ready');
           return;
         }
         // 2) 폴백 — 클라이언트 Open-Meteo(백엔드 미연결/실패 시).
         const data = await fetchWeather(latitude, longitude);
         setSummary(summarizeWeather(data));
+        setHourly(hourlyFromOpenMeteo(data));
         setPhase('ready');
       } catch (e) {
         setError((e as Error).message ?? '알 수 없는 오류');
@@ -166,5 +209,5 @@ export function useLocationWeather(): LocationWeather {
     run(true);
   }, [run]);
 
-  return { phase, place, summary, error, reload };
+  return { phase, place, summary, hourly, error, reload };
 }

@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BriefingSettings } from '@/components/BriefingSettings';
 import { ComposerBar } from '@/components/ComposerBar';
+import { HourlyStrip } from '@/components/HourlyStrip';
 import { SkyBackground } from '@/components/SkyBackground';
 import { useLocationWeather } from '@/hooks/useLocationWeather';
 import { useMorningBriefing } from '@/hooks/useMorningBriefing';
@@ -26,7 +27,7 @@ const BRIEFING_GO_HINT =
  * 하단의 입력 바로 무엇이든 물어볼 수 있다.
  */
 export function WeatherHero() {
-  const { phase, place, summary, reload } = useLocationWeather();
+  const { phase, place, summary, hourly, reload } = useLocationWeather();
   const briefing = useMorningBriefing(summary, place);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [briefingHint, setBriefingHint] = useState<string | null>(null);
@@ -111,6 +112,13 @@ export function WeatherHero() {
           )}
         </View>
 
+        {/* 시간별 예보 스트립 */}
+        {phase === 'ready' && hourly.length > 0 && (
+          <View style={styles.hourly}>
+            <HourlyStrip data={hourly} />
+          </View>
+        )}
+
         {/* 입력 바 */}
         <ComposerBar />
       </SafeAreaView>
@@ -182,6 +190,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
   },
   temp: { color: sky.heroDim, fontSize: 16, marginTop: spacing.xl, fontWeight: '500' },
+  hourly: { paddingBottom: spacing.md },
   permBtn: {
     alignSelf: 'flex-start',
     flexDirection: 'row',

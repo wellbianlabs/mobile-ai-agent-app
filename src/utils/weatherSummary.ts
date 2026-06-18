@@ -30,6 +30,35 @@ export interface OpenMeteoResponse {
   };
 }
 
+/** 시간별 예보 한 칸(스트립 표시용). */
+export interface HourPoint {
+  /** 로컬 ISO 시각("2026-06-18T15:00"). */
+  time: string;
+  tempC: number;
+  popPct: number | null;
+  emoji: string;
+}
+
+/** 한국어 상태 → 이모지(백엔드 hourly.condition 매핑용). */
+export function conditionEmoji(condition: string, isDay: boolean): string {
+  const c = condition;
+  if (c.includes('비')) return c.includes('눈') ? '🌨️' : '🌧️';
+  if (c.includes('눈')) return '❄️';
+  if (c.includes('뇌우') || c.includes('번개') || c.includes('우박')) return '⛈️';
+  if (c.includes('소나기')) return '🌦️';
+  if (c.includes('안개')) return '🌫️';
+  if (c.includes('흐')) return '☁️';
+  if (c.includes('구름') || c.includes('부분')) return '⛅';
+  if (c.includes('맑')) return isDay ? '☀️' : '🌙';
+  return isDay ? '🌤️' : '☁️';
+}
+
+/** WMO 코드 → 이모지(Open-Meteo 폴백 hourly용, 낮/밤 반영). */
+export function wmoEmoji(code: number | undefined, isDay: boolean): string {
+  if ((code === 0 || code === 1) && !isDay) return '🌙';
+  return describe(code).emoji;
+}
+
 export interface WeatherSummary {
   /** 큰 헤드라인(예: "오후 3시에 강한 비가 예상돼요"). */
   headline: string;
