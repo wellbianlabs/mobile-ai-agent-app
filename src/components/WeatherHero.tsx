@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
+import { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   StyleSheet,
   Text,
@@ -9,12 +9,16 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BriefingSettings } from '@/components/BriefingSettings';
 import { ComposerBar } from '@/components/ComposerBar';
 import { SkyBackground } from '@/components/SkyBackground';
 import { useLocationWeather } from '@/hooks/useLocationWeather';
 import { useMorningBriefing } from '@/hooks/useMorningBriefing';
 import { sky, spacing } from '@/theme/tokens';
 import { getSkyScene } from '@/utils/skyTheme';
+
+const BRIEFING_GO_HINT =
+  'Expo Go에서는 알림이 동작하지 않아요. 개발 빌드(APK)에서 켜집니다.';
 
 /**
  * 날씨 히어로 홈 — 첫 화면.
@@ -24,20 +28,15 @@ import { getSkyScene } from '@/utils/skyTheme';
 export function WeatherHero() {
   const { phase, place, summary, reload } = useLocationWeather();
   const briefing = useMorningBriefing(summary, place);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [briefingHint, setBriefingHint] = useState<string | null>(null);
 
   const loading = phase === 'idle' || phase === 'locating' || phase === 'loading';
 
-  const onToggleBriefing = async () => {
-    const on = await briefing.toggle();
-    if (on) {
-      Alert.alert('아침 브리핑 켜짐', '매일 오전 7:30에 오늘 날씨를 알려드릴게요.');
-    } else if (!briefing.enabled) {
-      // 켜기 시도가 실패한 경우(권한 거부/Expo Go 미지원)에만 안내.
-      Alert.alert(
-        '브리핑을 켤 수 없어요',
-        '알림 권한을 허용했는지 확인해 주세요. (개발 빌드에서 동작 — Expo Go는 알림 미지원)',
-      );
-    }
+  const onToggleBriefing = async (next: boolean) => {
+    const ok = await briefing.setEnabled(next);
+    // 켜기를 눌렀는데 실패하면(Expo Go/권한 거부) 안내, 성공/끄기면 안내 제거.
+    setBriefingHint(next && !ok ? BRIEFING_GO_HINT : null);
   };
 
   const scene = getSkyScene(
@@ -60,10 +59,10 @@ export function WeatherHero() {
           </View>
           {briefing.ready && (
             <Pressable
-              onPress={onToggleBriefing}
+              onPress={() => setSettingsOpen(true)}
               hitSlop={8}
               style={[styles.bell, briefing.enabled && styles.bellOn]}
-              accessibilityLabel={briefing.enabled ? '아침 브리핑 끄기' : '아침 브리핑 켜기'}
+              accessibilityLabel="아침 브리핑 설정"
             >
               <Feather name={briefing.enabled ? 'bell' : 'bell-off'} size={16} color="#fff" />
             </Pressable>
@@ -115,6 +114,16 @@ export function WeatherHero() {
         {/* 입력 바 */}
         <ComposerBar />
       </SafeAreaView>
+
+      <BriefingSettings
+        visible={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        enabled={briefing.enabled}
+        time={briefing.time}
+        onToggle={onToggleBriefing}
+        onChangeTime={briefing.setTime}
+        hint={briefingHint}
+      />
     </SkyBackground>
   );
 }
