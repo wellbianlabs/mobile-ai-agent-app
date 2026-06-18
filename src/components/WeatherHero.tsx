@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  AppState,
   Pressable,
   StyleSheet,
   Text,
@@ -49,7 +50,7 @@ export function WeatherHero() {
   const [briefingHint, setBriefingHint] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
 
-  // 현재 시각 — 매 분 갱신(다음 분 경계에 맞춰 정렬).
+  // 현재 시각 — 매 분 갱신(다음 분 경계에 맞춰 정렬) + 앱 재활성화 시 즉시 새로고침.
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | undefined;
     const tick = () => setNow(new Date());
@@ -57,9 +58,14 @@ export function WeatherHero() {
       tick();
       interval = setInterval(tick, 60 * 1000);
     }, (60 - new Date().getSeconds()) * 1000);
+    // 잠금 해제/포그라운드 복귀 시 멈춰 있던 타이머 대신 즉시 갱신.
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') tick();
+    });
     return () => {
       clearTimeout(timeout);
       if (interval) clearInterval(interval);
+      sub.remove();
     };
   }, []);
 
