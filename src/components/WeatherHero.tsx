@@ -34,10 +34,8 @@ function formatDate(d: Date): string {
   return `${d.getMonth() + 1}월 ${d.getDate()}일 ${WEEKDAYS[d.getDay()]}요일`;
 }
 
-const SOURCE_LABEL: Record<string, string> = {
-  KWeather: '케이웨더(KWeather)',
-  'Open-Meteo': 'Open-Meteo',
-};
+/** 출처 표기는 국내외 모두 케이웨더로 통일(앱 브랜딩). */
+const SOURCE_LABEL = '케이웨더(KWeather)';
 
 /**
  * 날씨 히어로 홈 — 첫 화면.
@@ -80,7 +78,7 @@ export function WeatherHero() {
       : undefined,
   );
 
-  const sourceLabel = source ? SOURCE_LABEL[source] : null;
+  const sourceLabel = source ? SOURCE_LABEL : null;
 
   return (
     <SkyBackground scene={scene}>
