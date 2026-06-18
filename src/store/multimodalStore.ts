@@ -36,6 +36,8 @@ export interface ConversationTurn {
   answer?: string;
   toolsUsed?: string[];
   citations?: Array<{ title?: string; url: string }>;
+  /** 후속 탭 제안(이 턴 응답에 딸린 빠른 질문/선택지). */
+  suggestions?: string[];
   error?: string;
 }
 

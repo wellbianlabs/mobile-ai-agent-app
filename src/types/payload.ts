@@ -134,6 +134,8 @@ export interface AgentResponse {
   toolsUsed?: string[];
   /** 웹검색 인용 출처. */
   citations?: Array<{ title?: string; url: string }>;
+  /** 후속 탭 제안(사용자가 탭으로 이어갈 질문/선택지). */
+  suggestions?: string[];
   /** 음성 첨부가 서버에서 전사된 경우 그 텍스트. */
   transcript?: string;
   [key: string]: unknown;

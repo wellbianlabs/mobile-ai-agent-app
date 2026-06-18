@@ -3,12 +3,14 @@ import { useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
   Linking,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 
+import { useSendMessage } from '@/hooks/useSendMessage';
 import { useMultimodalStore, type ConversationTurn } from '@/store/multimodalStore';
 import { radius, sky, spacing } from '@/theme/tokens';
 import { Markdown } from './Markdown';
@@ -18,6 +20,7 @@ import { Markdown } from './Markdown';
  */
 export function ConversationView() {
   const turns = useMultimodalStore((s) => s.turns);
+  const { send, sending } = useSendMessage();
   const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -32,14 +35,30 @@ export function ConversationView() {
       contentContainerStyle={styles.scrollContent}
       keyboardShouldPersistTaps="handled"
     >
-      {turns.map((turn) => (
-        <Turn key={turn.id} turn={turn} />
+      {turns.map((turn, i) => (
+        <Turn
+          key={turn.id}
+          turn={turn}
+          isLast={i === turns.length - 1}
+          sending={sending}
+          onSuggest={(q) => void send(q)}
+        />
       ))}
     </ScrollView>
   );
 }
 
-function Turn({ turn }: { turn: ConversationTurn }) {
+function Turn({
+  turn,
+  isLast,
+  sending,
+  onSuggest,
+}: {
+  turn: ConversationTurn;
+  isLast: boolean;
+  sending: boolean;
+  onSuggest: (q: string) => void;
+}) {
   return (
     <View style={styles.turn}>
       <View style={styles.userRow}>
@@ -91,6 +110,23 @@ function Turn({ turn }: { turn: ConversationTurn }) {
           )}
         </View>
       </View>
+
+      {/* 후속 탭 제안 — 마지막 답변에만, 탭 시 즉시 전송 */}
+      {isLast && turn.status === 'done' && !!turn.suggestions?.length && (
+        <View style={styles.suggestRow}>
+          {turn.suggestions.map((s) => (
+            <Pressable
+              key={s}
+              style={[styles.suggestChip, sending && styles.suggestChipDim]}
+              disabled={sending}
+              onPress={() => onSuggest(s)}
+            >
+              <Feather name="corner-up-right" size={12} color={sky.brand} />
+              <Text style={styles.suggestText}>{s}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -175,4 +211,19 @@ const styles = StyleSheet.create({
 
   citations: { marginTop: spacing.sm, gap: 3 },
   citation: { color: sky.brand, fontSize: 12, textDecorationLine: 'underline' },
+
+  suggestRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, paddingTop: spacing.xs },
+  suggestChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: sky.brandSoft,
+    borderWidth: 1,
+    borderColor: 'rgba(46,134,222,0.35)',
+    borderRadius: radius.pill,
+    paddingVertical: 7,
+    paddingHorizontal: spacing.md,
+  },
+  suggestChipDim: { opacity: 0.5 },
+  suggestText: { color: sky.brand, fontSize: 13, fontWeight: '600' },
 });

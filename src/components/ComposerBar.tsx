@@ -13,7 +13,7 @@ import {
 
 import { CameraCaptureOverlay } from '@/components/CameraCaptureOverlay';
 import { useImageCapture } from '@/hooks/useImageCapture';
-import { sendUnifiedPayload } from '@/api/agentClient';
+import { useSendMessage } from '@/hooks/useSendMessage';
 import {
   MAX_IMAGES,
   selectHasContent,
@@ -40,18 +40,14 @@ export function ComposerBar() {
   const text = useMultimodalStore((s) => s.text);
   const images = useMultimodalStore((s) => s.images);
   const voice = useMultimodalStore((s) => s.voice);
-  const sendStatus = useMultimodalStore((s) => s.sendStatus);
   const hasContent = useMultimodalStore(selectHasContent);
 
   const setText = useMultimodalStore((s) => s.setText);
   const addImage = useMultimodalStore((s) => s.addImage);
   const removeImage = useMultimodalStore((s) => s.removeImage);
   const clearVoice = useMultimodalStore((s) => s.clearVoice);
-  const setSendStatus = useMultimodalStore((s) => s.setSendStatus);
-  const buildPayload = useMultimodalStore((s) => s.buildPayload);
-  const resetAll = useMultimodalStore((s) => s.resetAll);
-  const startTurn = useMultimodalStore((s) => s.startTurn);
-  const resolveTurn = useMultimodalStore((s) => s.resolveTurn);
+
+  const { send, sending } = useSendMessage();
 
   const [notice, setNotice] = useState<string | null>(null);
   const [voiceOpen, setVoiceOpen] = useState(false);
@@ -59,55 +55,21 @@ export function ComposerBar() {
 
   const { pickFromLibrary } = useImageCapture({ onError: setNotice });
 
-  const sending = sendStatus === 'sending';
   const imagesFull = images.length >= MAX_IMAGES;
-
-  const dispatch = useCallback(
-    async (overrideText?: string) => {
-      setNotice(null);
-      setSendStatus('sending');
-      if (overrideText !== undefined) setText(overrideText);
-
-      const payload = buildPayload();
-      const finalText = overrideText !== undefined ? overrideText.trim() : payload.text;
-      const turnId = startTurn({
-        question: finalText || (payload.images.length ? '(이미지 첨부)' : '(음성)'),
-        imageCount: payload.images.length,
-        hasVoice: payload.voice !== null,
-      });
-
-      try {
-        const res = await sendUnifiedPayload({ ...payload, text: finalText });
-        setSendStatus('success', { requestId: res.requestId ?? null });
-        resolveTurn(turnId, {
-          status: 'done',
-          answer: res.message ?? '(응답 없음)',
-          toolsUsed: res.toolsUsed,
-          citations: res.citations,
-        });
-        resetAll();
-      } catch (e) {
-        const message = (e as Error).message ?? '알 수 없는 오류';
-        setSendStatus('error', { error: message });
-        resolveTurn(turnId, { status: 'error', error: message });
-        setNotice(`전송 실패: ${message}`);
-      }
-    },
-    [buildPayload, resetAll, resolveTurn, setSendStatus, setText, startTurn],
-  );
 
   const handleSend = useCallback(() => {
     if (!hasContent || sending) return;
-    dispatch();
-  }, [hasContent, sending, dispatch]);
+    setNotice(null);
+    void send();
+  }, [hasContent, sending, send]);
 
   const handleVoiceSearch = useCallback(
     (q: string) => {
       setVoiceOpen(false);
       const query = q.trim();
-      if (query) dispatch(query);
+      if (query) void send(query);
     },
-    [dispatch],
+    [send],
   );
 
   const handleCamera = useCallback(() => {
