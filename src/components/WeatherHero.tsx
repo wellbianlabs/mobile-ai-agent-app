@@ -120,8 +120,8 @@ export function WeatherHero() {
 
           {phase === 'ready' && summary && (
             <>
-              <Text style={styles.headline}>{summary.headline}</Text>
-              <Text style={styles.advice}>{summary.advice}</Text>
+              <Text style={styles.headline} numberOfLines={2}>{summary.headline}</Text>
+              <Text style={styles.advice} numberOfLines={2}>{summary.advice}</Text>
               {summary.tempC != null && (
                 <Text style={styles.temp}>
                   {summary.emoji}  {summary.tempC}°  ·  {summary.condition}
@@ -223,41 +223,41 @@ const styles = StyleSheet.create({
   chipText: { color: '#fff', fontSize: 13.5, fontWeight: '600', ...TEXT_SHADOW },
   hero: { flex: 1, justifyContent: 'flex-start', paddingHorizontal: spacing.xl, paddingTop: spacing.lg },
 
-  clock: { marginBottom: spacing.lg },
+  clock: { marginBottom: spacing.md },
   clockTime: {
     color: sky.heroText,
-    fontSize: 30,
+    fontSize: 26,
     fontWeight: '700',
     letterSpacing: -0.5,
     fontVariant: ['tabular-nums'],
     ...TEXT_SHADOW,
   },
-  clockDate: { color: '#fff', opacity: 0.9, fontSize: 14, fontWeight: '500', marginTop: 2, ...TEXT_SHADOW },
+  clockDate: { color: '#fff', opacity: 0.9, fontSize: 13, fontWeight: '500', marginTop: 2, ...TEXT_SHADOW },
 
-  sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: spacing.md },
+  sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: spacing.sm },
   sourceText: { color: '#fff', opacity: 0.9, fontSize: 12, fontWeight: '500', ...TEXT_SHADOW },
-  loadingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.xl },
+  loadingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.lg },
   loadingText: { color: '#fff', fontSize: 15, ...TEXT_SHADOW },
   headline: {
     color: sky.heroText,
     fontFamily: 'serif',
-    fontSize: 42,
+    fontSize: 29,
     fontWeight: '700',
-    lineHeight: 52,
-    letterSpacing: -0.6,
+    lineHeight: 37,
+    letterSpacing: -0.5,
     ...TEXT_SHADOW,
   },
   advice: {
     color: '#fff',
     fontFamily: 'serif',
-    fontSize: 34,
+    fontSize: 19,
     fontWeight: '600',
-    lineHeight: 44,
-    letterSpacing: -0.4,
-    marginTop: spacing.lg,
+    lineHeight: 26,
+    letterSpacing: -0.2,
+    marginTop: spacing.sm,
     ...TEXT_SHADOW,
   },
-  temp: { color: '#fff', opacity: 0.95, fontSize: 16, marginTop: spacing.xl, fontWeight: '500', ...TEXT_SHADOW },
+  temp: { color: '#fff', opacity: 0.95, fontSize: 15, marginTop: spacing.md, fontWeight: '500', ...TEXT_SHADOW },
   hourly: { paddingBottom: spacing.md },
   permBtn: {
     alignSelf: 'flex-start',
