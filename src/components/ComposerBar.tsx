@@ -168,43 +168,47 @@ export function ComposerBar() {
 
       {notice && <Text style={styles.notice}>{notice}</Text>}
 
-      {/* 입력창 — 아이콘(갤러리·촬영·음성)을 입력창 안에 두고, 전송은 오른쪽 원형 */}
-      <View style={styles.row}>
-        <View style={styles.pill}>
-          <TextInput
-            style={styles.input}
-            value={text}
-            onChangeText={setText}
-            editable={!sending}
-            placeholder="무엇이든 물어보세요…"
-            placeholderTextColor={sky.inkFaint}
-            multiline
-          />
-          <IconBtn icon="image" onPress={handleLibrary} disabled={sending || imagesFull} />
-          <IconBtn icon="camera" onPress={handleCamera} disabled={sending || imagesFull} />
-          <IconBtn
-            icon="mic"
-            onPress={() =>
-              IS_EXPO_GO
-                ? setNotice('음성 입력은 개발 빌드(APK)에서 지원돼요. Expo Go에선 텍스트·사진을 이용해 주세요.')
-                : setVoiceOpen(true)
-            }
-            disabled={sending}
-          />
-        </View>
+      {/* 입력 카드 — 위: 전체 폭 텍스트 / 아래: 아이콘(갤러리·촬영·음성) + 전송 */}
+      <View style={styles.card}>
+        <TextInput
+          style={styles.input}
+          value={text}
+          onChangeText={setText}
+          editable={!sending}
+          placeholder="무엇이든 물어보세요…"
+          placeholderTextColor={sky.inkFaint}
+          multiline
+          textAlignVertical="top"
+        />
 
-        <Pressable
-          onPress={handleSend}
-          disabled={!hasContent || sending}
-          style={[styles.send, (!hasContent || sending) && styles.sendDisabled]}
-          accessibilityLabel="전송"
-        >
-          {sending ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <Feather name="arrow-up" size={20} color={hasContent ? '#fff' : sky.inkFaint} />
-          )}
-        </Pressable>
+        <View style={styles.actions}>
+          <View style={styles.leftIcons}>
+            <IconBtn icon="image" onPress={handleLibrary} disabled={sending || imagesFull} />
+            <IconBtn icon="camera" onPress={handleCamera} disabled={sending || imagesFull} />
+            <IconBtn
+              icon="mic"
+              onPress={() =>
+                IS_EXPO_GO
+                  ? setNotice('음성 입력은 개발 빌드(APK)에서 지원돼요. Expo Go에선 텍스트·사진을 이용해 주세요.')
+                  : setVoiceOpen(true)
+              }
+              disabled={sending}
+            />
+          </View>
+
+          <Pressable
+            onPress={handleSend}
+            disabled={!hasContent || sending}
+            style={[styles.send, (!hasContent || sending) && styles.sendDisabled]}
+            accessibilityLabel="전송"
+          >
+            {sending ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <Feather name="arrow-up" size={22} color={hasContent ? '#fff' : sky.inkFaint} />
+            )}
+          </Pressable>
+        </View>
       </View>
 
       {voiceOpen && !IS_EXPO_GO && (
@@ -268,37 +272,43 @@ const styles = StyleSheet.create({
   voiceChipText: { color: sky.ink, fontSize: 13 },
   notice: { color: sky.warn, fontSize: 12, paddingHorizontal: spacing.xs },
 
-  // 입력창 한 줄(흰 pill) + 오른쪽 전송 버튼
-  row: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm },
-  pill: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+  // 입력 카드(전체 폭) — 위: 텍스트 / 아래: 아이콘 + 전송
+  card: {
     backgroundColor: sky.surface,
-    borderRadius: radius.pill,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: sky.border,
-    paddingLeft: spacing.lg,
-    paddingRight: spacing.xs,
-    minHeight: 54,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
     shadowColor: '#16243A',
     shadowOpacity: 0.1,
-    shadowRadius: 10,
+    shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
     elevation: 3,
   },
   input: {
-    flex: 1,
+    width: '100%',
     color: sky.ink,
-    fontSize: 16,
-    paddingVertical: spacing.md,
-    maxHeight: 120,
+    fontSize: 17,
+    lineHeight: 23,
+    minHeight: 46,
+    maxHeight: 150,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xs,
   },
-  iconBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.xs,
+  },
+  leftIcons: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   iconDisabled: { opacity: 0.4 },
   send: {
-    width: 54,
-    height: 54,
+    width: 48,
+    height: 48,
     borderRadius: 999,
     backgroundColor: sky.brand,
     alignItems: 'center',
@@ -309,5 +319,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
   },
-  sendDisabled: { backgroundColor: sky.surface, borderWidth: 1, borderColor: sky.border, shadowOpacity: 0 },
+  sendDisabled: { backgroundColor: sky.surfaceSoft, shadowOpacity: 0, elevation: 0 },
 });
