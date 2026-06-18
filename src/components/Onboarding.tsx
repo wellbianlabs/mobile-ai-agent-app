@@ -12,7 +12,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SkyBackground } from '@/components/SkyBackground';
+import { useMultimodalStore } from '@/store/multimodalStore';
 import { radius, sky, spacing } from '@/theme/tokens';
+import { INDUSTRIES } from '@/utils/industries';
 import { getSkyScene } from '@/utils/skyTheme';
 
 interface Props {
@@ -32,6 +34,13 @@ const ITEMS: Array<{ icon: keyof typeof Feather.glyphMap; title: string; desc: s
  */
 export function Onboarding({ onDone }: Props) {
   const [busy, setBusy] = useState(false);
+  const [step, setStep] = useState<'industry' | 'perms'>('industry');
+  const setIndustry = useMultimodalStore((s) => s.setIndustry);
+
+  const chooseIndustry = (id: string) => {
+    setIndustry(id);
+    setStep('perms');
+  };
 
   const requestAll = async () => {
     setBusy(true);
@@ -55,43 +64,75 @@ export function Onboarding({ onDone }: Props) {
   return (
     <SkyBackground scene={getSkyScene(new Date().getHours())}>
       <SafeAreaView style={styles.fill}>
-        <View style={styles.content}>
-          <View style={styles.badge}>
-            <Feather name="cloud" size={26} color="#fff" />
-          </View>
-          <Text style={styles.eyebrow}>WELLBIAN AI · KWEATHER</Text>
-          <Text style={styles.title}>날씨를 비즈니스의{'\n'}전략 자산으로</Text>
-          <Text style={styles.subtitle}>
-            케이웨더 기반 날씨 AI 에이전트가 날씨를 사업의 의사결정 자산으로 바꿔드려요.{'\n'}정확한 위치 분석을 위해 아래 권한이 필요해요 — 동의는 한 번만.
-          </Text>
-
-          <View style={styles.list}>
-            {ITEMS.map((it) => (
-              <View key={it.title} style={styles.item}>
-                <View style={styles.itemIcon}>
-                  <Feather name={it.icon} size={18} color="#fff" />
-                </View>
-                <View style={styles.itemText}>
-                  <Text style={styles.itemTitle}>{it.title}</Text>
-                  <Text style={styles.itemDesc}>{it.desc}</Text>
-                </View>
+        {step === 'industry' ? (
+          <>
+            <View style={styles.content}>
+              <View style={styles.badge}>
+                <Feather name="briefcase" size={24} color="#fff" />
               </View>
-            ))}
-          </View>
-        </View>
+              <Text style={styles.eyebrow}>WELLBIAN AI · KWEATHER</Text>
+              <Text style={styles.title}>어떤 일을{'\n'}하고 계신가요?</Text>
+              <Text style={styles.subtitle}>
+                업종을 알려주시면 날씨를 그 사업 관점(작업·재고·발주·안전·매출)으로 분석·처방해드려요.
+              </Text>
 
-        <View style={styles.footer}>
-          <Pressable style={styles.cta} onPress={requestAll} disabled={busy}>
-            {busy ? (
-              <ActivityIndicator color={sky.brand} />
-            ) : (
-              <Text style={styles.ctaText}>권한 허용하고 시작하기</Text>
-            )}
-          </Pressable>
-          <Pressable onPress={onDone} disabled={busy} hitSlop={8}>
-            <Text style={styles.skip}>나중에 설정하기</Text>
-          </Pressable>
-        </View>
+              <View style={styles.grid}>
+                {INDUSTRIES.filter((i) => i.id !== 'general').map((ind) => (
+                  <Pressable key={ind.id} style={styles.gridCell} onPress={() => chooseIndustry(ind.id)}>
+                    <Feather name={ind.icon} size={20} color="#fff" />
+                    <Text style={styles.gridText}>{ind.label}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.footer}>
+              <Pressable onPress={() => chooseIndustry('general')} hitSlop={8}>
+                <Text style={styles.skip}>해당 없음 · 일반으로 시작</Text>
+              </Pressable>
+            </View>
+          </>
+        ) : (
+          <>
+            <View style={styles.content}>
+              <View style={styles.badge}>
+                <Feather name="cloud" size={26} color="#fff" />
+              </View>
+              <Text style={styles.eyebrow}>WELLBIAN AI · KWEATHER</Text>
+              <Text style={styles.title}>날씨를 비즈니스의{'\n'}전략 자산으로</Text>
+              <Text style={styles.subtitle}>
+                정확한 위치 분석을 위해 아래 권한이 필요해요 — 동의는 한 번만, 이후엔 자동으로 적용돼요.
+              </Text>
+
+              <View style={styles.list}>
+                {ITEMS.map((it) => (
+                  <View key={it.title} style={styles.item}>
+                    <View style={styles.itemIcon}>
+                      <Feather name={it.icon} size={18} color="#fff" />
+                    </View>
+                    <View style={styles.itemText}>
+                      <Text style={styles.itemTitle}>{it.title}</Text>
+                      <Text style={styles.itemDesc}>{it.desc}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.footer}>
+              <Pressable style={styles.cta} onPress={requestAll} disabled={busy}>
+                {busy ? (
+                  <ActivityIndicator color={sky.brand} />
+                ) : (
+                  <Text style={styles.ctaText}>권한 허용하고 시작하기</Text>
+                )}
+              </Pressable>
+              <Pressable onPress={onDone} disabled={busy} hitSlop={8}>
+                <Text style={styles.skip}>나중에 설정하기</Text>
+              </Pressable>
+            </View>
+          </>
+        )}
       </SafeAreaView>
     </SkyBackground>
   );
@@ -126,6 +167,18 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   subtitle: { color: sky.heroDim, fontSize: 15, lineHeight: 22 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
+  gridCell: {
+    width: '31%',
+    alignItems: 'center',
+    gap: 7,
+    paddingVertical: spacing.lg,
+    borderRadius: radius.md,
+    backgroundColor: sky.chip,
+    borderWidth: 1,
+    borderColor: sky.chipBorder,
+  },
+  gridText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   list: { gap: spacing.md, marginTop: spacing.sm },
   item: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   itemIcon: {
