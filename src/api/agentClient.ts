@@ -1,4 +1,5 @@
 import { getDeviceKind, getNetworkType } from '@/utils/deviceContext';
+import { getIndustry } from '@/utils/industries';
 import type {
   AgentResponse,
   IMobileAgentUnifiedPayload,
@@ -91,6 +92,7 @@ export function toWirePayload(
       coords: payload.location
         ? { lat: payload.location.lat, lon: payload.location.lon }
         : undefined,
+      industry: payload.industry ? getIndustry(payload.industry).label : undefined,
     },
     inputs: {
       text: payload.text,

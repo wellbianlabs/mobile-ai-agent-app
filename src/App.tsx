@@ -43,8 +43,11 @@ function AppInner() {
   const clearTurns = useMultimodalStore((s) => s.clearTurns);
   const place = useMultimodalStore((s) => s.location?.place ?? null);
 
+  const hydrateIndustry = useMultimodalStore((s) => s.hydrateIndustry);
+
   useEffect(() => {
     void configureNotifications(); // 포그라운드 알림 배너 핸들러(아침 브리핑, Expo Go 면 no-op)
+    void hydrateIndustry(); // 저장된 업종 로드
     AsyncStorage.getItem(ONBOARD_KEY)
       .then((v) => setOnboarded(v === '1'))
       .catch(() => setOnboarded(false));

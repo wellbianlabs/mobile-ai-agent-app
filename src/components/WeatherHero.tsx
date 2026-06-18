@@ -14,12 +14,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BriefingSettings } from '@/components/BriefingSettings';
 import { ComposerBar } from '@/components/ComposerBar';
 import { HourlyStrip } from '@/components/HourlyStrip';
+import { IndustryPicker } from '@/components/IndustryPicker';
 import { Monthly30 } from '@/components/Monthly30';
 import { SkyBackground } from '@/components/SkyBackground';
 import { WeeklyForecast } from '@/components/WeeklyForecast';
 import { useLocationWeather } from '@/hooks/useLocationWeather';
 import { useMorningBriefing } from '@/hooks/useMorningBriefing';
+import { useMultimodalStore } from '@/store/multimodalStore';
 import { sky, spacing } from '@/theme/tokens';
+import { getIndustry } from '@/utils/industries';
 import { getSkyScene } from '@/utils/skyTheme';
 
 const BRIEFING_GO_HINT =
@@ -52,7 +55,13 @@ export function WeatherHero() {
   const briefing = useMorningBriefing(summary, place);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [briefingHint, setBriefingHint] = useState<string | null>(null);
+  const [industryOpen, setIndustryOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
+
+  const industryId = useMultimodalStore((s) => s.industry);
+  const setIndustry = useMultimodalStore((s) => s.setIndustry);
+  const setText = useMultimodalStore((s) => s.setText);
+  const industry = getIndustry(industryId);
 
   // 현재 시각 — 매 분 갱신(다음 분 경계에 맞춰 정렬) + 앱 재활성화 시 즉시 새로고침.
   useEffect(() => {
@@ -195,6 +204,26 @@ export function WeatherHero() {
         )}
         </ScrollView>
 
+        {/* 업종 + 산업별 빠른 질문 */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.bizBar}
+          contentContainerStyle={styles.bizBarContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Pressable style={styles.bizChip} onPress={() => setIndustryOpen(true)}>
+            <Feather name={industry.icon} size={13} color="#fff" />
+            <Text style={styles.bizChipText}>{industry.label}</Text>
+            <Feather name="chevron-down" size={13} color="#fff" />
+          </Pressable>
+          {industry.presets.map((q) => (
+            <Pressable key={q} style={styles.presetChip} onPress={() => setText(q)}>
+              <Text style={styles.presetText}>{q}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+
         {/* 입력 바 */}
         <ComposerBar />
       </SafeAreaView>
@@ -207,6 +236,13 @@ export function WeatherHero() {
         onToggle={onToggleBriefing}
         onChangeTime={briefing.setTime}
         hint={briefingHint}
+      />
+
+      <IndustryPicker
+        visible={industryOpen}
+        current={industryId}
+        onSelect={setIndustry}
+        onClose={() => setIndustryOpen(false)}
       />
     </SkyBackground>
   );
@@ -255,6 +291,28 @@ const styles = StyleSheet.create({
   scrollBody: { paddingBottom: spacing.lg },
   hero: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm, paddingBottom: spacing.lg },
   weekly: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },
+
+  bizBar: { flexGrow: 0, maxHeight: 44 },
+  bizBarContent: { paddingHorizontal: spacing.lg, gap: spacing.sm, alignItems: 'center' },
+  bizChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: sky.brand,
+    borderRadius: 999,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 7,
+  },
+  bizChipText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  presetChip: {
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderWidth: 1,
+    borderColor: sky.chipBorder,
+    borderRadius: 999,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 7,
+  },
+  presetText: { color: sky.ink, fontSize: 13, fontWeight: '500' },
 
   clock: { marginBottom: spacing.md },
   clockTime: {

@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
 import type {
@@ -7,6 +8,8 @@ import type {
   UnifiedPayload,
   VoiceClip,
 } from '@/types/payload';
+
+const INDUSTRY_KEY = 'industry.v1';
 
 /**
  * 입력 수단별 로컬 상태를 독립적으로 제어하는 단일 스토어.
@@ -50,6 +53,13 @@ interface MultimodalState {
   // ---- 위치 컨텍스트 ----
   location: LocationContext | null;
   setLocation: (loc: LocationContext | null) => void;
+
+  // ---- 업종(산업군) ----
+  /** 선택한 업종 id(industries.ts). null=미선택. */
+  industry: string | null;
+  setIndustry: (id: string) => void;
+  /** 영속값 로드(앱 시작 시 1회). */
+  hydrateIndustry: () => Promise<void>;
 
   // ---- 대화 로그 ----
   turns: ConversationTurn[];
@@ -113,6 +123,20 @@ export const useMultimodalStore = create<MultimodalState>((set, get) => ({
   location: null,
   setLocation: (loc) => set({ location: loc }),
 
+  industry: null,
+  setIndustry: (id) => {
+    set({ industry: id });
+    AsyncStorage.setItem(INDUSTRY_KEY, id).catch(() => undefined);
+  },
+  hydrateIndustry: async () => {
+    try {
+      const v = await AsyncStorage.getItem(INDUSTRY_KEY);
+      if (v) set({ industry: v });
+    } catch {
+      /* 기본값 유지 */
+    }
+  },
+
   turns: [],
   startTurn: (t) => {
     const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -150,13 +174,14 @@ export const useMultimodalStore = create<MultimodalState>((set, get) => ({
     }),
 
   buildPayload: () => {
-    const { text, voice, images, location, turns } = get();
+    const { text, voice, images, location, turns, industry } = get();
     return {
       text: text.trim(),
       voice,
       images,
       clientTimestamp: Date.now(),
       location,
+      industry,
       history: buildHistory(turns),
     };
   },

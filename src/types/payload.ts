@@ -65,6 +65,8 @@ export interface UnifiedPayload {
   locale?: string;
   /** 현재 위치(있으면). "날씨" 등 위치 기반 질의의 기본값으로 사용. */
   location?: LocationContext | null;
+  /** 선택한 업종 id(산업군별 맞춤 처방용). */
+  industry?: string | null;
   /** 직전 대화 맥락(텍스트만, 오래된→최신 순). 멀티턴 메모리. */
   history?: ConversationMessage[];
 }
@@ -96,6 +98,8 @@ export interface IMobileAgentUnifiedPayload {
     /** 현재 위치(권한 허용 시). 위치 기반 질의의 기본값. */
     place?: string | null;
     coords?: { lat: number; lon: number };
+    /** 사용자 업종(산업군 라벨, 예: "식음료·외식"). 답변을 그 업종 관점으로 처방. */
+    industry?: string;
   };
   inputs: {
     /** 대충 적은 질문 텍스트(없을 시 ""). */
