@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -21,16 +21,49 @@ import { getSkyScene } from '@/utils/skyTheme';
 const BRIEFING_GO_HINT =
   'Expo Go에서는 알림이 동작하지 않아요. 개발 빌드(APK)에서 켜집니다.';
 
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+
+function formatClock(d: Date): string {
+  const h = d.getHours();
+  const ampm = h < 12 ? '오전' : '오후';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${ampm} ${h12}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+function formatDate(d: Date): string {
+  return `${d.getMonth() + 1}월 ${d.getDate()}일 ${WEEKDAYS[d.getDay()]}요일`;
+}
+
+const SOURCE_LABEL: Record<string, string> = {
+  KWeather: '케이웨더(KWeather)',
+  'Open-Meteo': 'Open-Meteo',
+};
+
 /**
  * 날씨 히어로 홈 — 첫 화면.
  * 시간대·날씨 반응형 하늘 배경 위에 현재 위치 날씨 요약(큰 헤드라인 + 조언)을 보여주고,
  * 하단의 입력 바로 무엇이든 물어볼 수 있다.
  */
 export function WeatherHero() {
-  const { phase, place, summary, hourly, reload } = useLocationWeather();
+  const { phase, place, summary, hourly, source, reload } = useLocationWeather();
   const briefing = useMorningBriefing(summary, place);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [briefingHint, setBriefingHint] = useState<string | null>(null);
+  const [now, setNow] = useState(() => new Date());
+
+  // 현재 시각 — 매 분 갱신(다음 분 경계에 맞춰 정렬).
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | undefined;
+    const tick = () => setNow(new Date());
+    const timeout = setTimeout(() => {
+      tick();
+      interval = setInterval(tick, 60 * 1000);
+    }, (60 - new Date().getSeconds()) * 1000);
+    return () => {
+      clearTimeout(timeout);
+      if (interval) clearInterval(interval);
+    };
+  }, []);
 
   const loading = phase === 'idle' || phase === 'locating' || phase === 'loading';
 
@@ -41,11 +74,13 @@ export function WeatherHero() {
   };
 
   const scene = getSkyScene(
-    new Date().getHours(),
+    now.getHours(),
     summary
       ? { code: summary.code, isDay: summary.isDay, rainy: summary.rainy, cloudy: summary.cloudy }
       : undefined,
   );
+
+  const sourceLabel = source ? SOURCE_LABEL[source] : null;
 
   return (
     <SkyBackground scene={scene}>
@@ -72,6 +107,12 @@ export function WeatherHero() {
 
         {/* 헤드라인 영역 */}
         <View style={styles.hero}>
+          {/* 현재 시각 */}
+          <View style={styles.clock}>
+            <Text style={styles.clockTime}>{formatClock(now)}</Text>
+            <Text style={styles.clockDate}>{formatDate(now)}</Text>
+          </View>
+
           {loading && (
             <View style={styles.loadingRow}>
               <ActivityIndicator color="#fff" />
@@ -87,6 +128,12 @@ export function WeatherHero() {
                 <Text style={styles.temp}>
                   {summary.emoji}  {summary.tempC}°  ·  {summary.condition}
                 </Text>
+              )}
+              {sourceLabel && (
+                <View style={styles.sourceRow}>
+                  <Feather name="database" size={11} color={sky.heroDim} />
+                  <Text style={styles.sourceText}>데이터 제공 · {sourceLabel}</Text>
+                </View>
               )}
             </>
           )}
@@ -169,7 +216,20 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   chipText: { color: '#fff', fontSize: 13.5, fontWeight: '600' },
-  hero: { flex: 1, justifyContent: 'flex-start', paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
+  hero: { flex: 1, justifyContent: 'flex-start', paddingHorizontal: spacing.xl, paddingTop: spacing.lg },
+
+  clock: { marginBottom: spacing.lg },
+  clockTime: {
+    color: sky.heroText,
+    fontSize: 30,
+    fontWeight: '700',
+    letterSpacing: -0.5,
+    fontVariant: ['tabular-nums'],
+  },
+  clockDate: { color: sky.heroDim, fontSize: 14, fontWeight: '500', marginTop: 2 },
+
+  sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: spacing.md },
+  sourceText: { color: sky.heroDim, fontSize: 12, fontWeight: '500' },
   loadingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.xl },
   loadingText: { color: sky.heroDim, fontSize: 15 },
   headline: {

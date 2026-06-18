@@ -22,11 +22,13 @@ interface BackendWeather {
   hourly?: Array<{ time: string; tempC: number; popPct: number | null; condition: string; isDay: boolean }>;
 }
 
+export type WeatherSource = 'KWeather' | 'Open-Meteo';
+
 async function fetchFromBackend(
   lat: number,
   lon: number,
   place: string | null,
-): Promise<{ place: string | null; summary: WeatherSummary; hourly: HourPoint[] } | null> {
+): Promise<{ place: string | null; summary: WeatherSummary; hourly: HourPoint[]; source: WeatherSource | null } | null> {
   try {
     const url =
       `${WEATHER_ENDPOINT}?lat=${lat}&lon=${lon}` + (place ? `&place=${encodeURIComponent(place)}` : '');
@@ -46,6 +48,7 @@ async function fetchFromBackend(
     return {
       place: d.place ?? place,
       hourly,
+      source: d.source ?? null,
       summary: {
         headline: d.summary.headline,
         advice: d.summary.advice,
@@ -99,6 +102,8 @@ export interface LocationWeather {
   summary: WeatherSummary | null;
   /** 시간별 예보(현재 시각부터). 없으면 빈 배열. */
   hourly: HourPoint[];
+  /** 데이터 출처(케이웨더/Open-Meteo). */
+  source: WeatherSource | null;
   error: string | null;
   /** 위치 권한 재요청 + 새로고침. */
   reload: () => void;
@@ -144,6 +149,7 @@ export function useLocationWeather(): LocationWeather {
   const [place, setPlace] = useState<string | null>(null);
   const [summary, setSummary] = useState<WeatherSummary | null>(null);
   const [hourly, setHourly] = useState<HourPoint[]>([]);
+  const [source, setSource] = useState<WeatherSource | null>(null);
   const [error, setError] = useState<string | null>(null);
   const setLocation = useMultimodalStore((s) => s.setLocation);
 
@@ -184,6 +190,7 @@ export function useLocationWeather(): LocationWeather {
           if (fromBackend.place) setPlace(fromBackend.place);
           setSummary(fromBackend.summary);
           setHourly(fromBackend.hourly);
+          setSource(fromBackend.source);
           setPhase('ready');
           return;
         }
@@ -191,6 +198,7 @@ export function useLocationWeather(): LocationWeather {
         const data = await fetchWeather(latitude, longitude);
         setSummary(summarizeWeather(data));
         setHourly(hourlyFromOpenMeteo(data));
+        setSource('Open-Meteo');
         setPhase('ready');
       } catch (e) {
         setError((e as Error).message ?? '알 수 없는 오류');
@@ -209,5 +217,5 @@ export function useLocationWeather(): LocationWeather {
     run(true);
   }, [run]);
 
-  return { phase, place, summary, hourly, error, reload };
+  return { phase, place, summary, hourly, source, error, reload };
 }
