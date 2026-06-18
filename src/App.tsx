@@ -100,7 +100,7 @@ function AppInner() {
             <Feather name="chevron-left" size={24} color={sky.ink} />
           </Pressable>
           <Text style={styles.headerTitle} numberOfLines={1}>
-            {place ? `${place} · 비서` : '비서'}
+            {place ? `${place} · wellbianAI` : 'wellbianAI'}
           </Text>
           <Pressable onPress={clearTurns} hitSlop={8} accessibilityLabel="새로 시작">
             <Feather name="home" size={20} color={sky.inkMuted} />

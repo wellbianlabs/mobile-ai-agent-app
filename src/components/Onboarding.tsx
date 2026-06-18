@@ -59,9 +59,10 @@ export function Onboarding({ onDone }: Props) {
           <View style={styles.badge}>
             <Feather name="cloud" size={26} color="#fff" />
           </View>
-          <Text style={styles.title}>나의 비서를{'\n'}시작할게요</Text>
+          <Text style={styles.eyebrow}>WELLBIAN AI</Text>
+          <Text style={styles.title}>날씨를{'\n'}전략자산으로</Text>
           <Text style={styles.subtitle}>
-            더 똑똑하게 도와드리기 위해 아래 권한이 필요해요.{'\n'}동의는 한 번만, 이후엔 자동으로 적용돼요.
+            날씨를 전략자산으로 만드는 날씨 AI 에이전트.{'\n'}더 똑똑하게 도와드리기 위해 아래 권한이 필요해요 — 동의는 한 번만.
           </Text>
 
           <View style={styles.list}>
@@ -108,6 +109,13 @@ const styles = StyleSheet.create({
     borderColor: sky.chipBorder,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  eyebrow: {
+    color: '#fff',
+    opacity: 0.85,
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 3,
   },
   title: {
     color: sky.heroText,
