@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { HERO_TEXT_SHADOW, sky, spacing } from '@/theme/tokens';
+import { HERO_TEXT_SHADOW, IS_WEB, sky, spacing } from '@/theme/tokens';
 import type { HourPoint } from '@/utils/weatherSummary';
 
 /**
@@ -21,7 +21,7 @@ export function HourlyStrip({ data }: { data: HourPoint[] }) {
   return (
     <ScrollView
       horizontal
-      showsHorizontalScrollIndicator={false}
+      showsHorizontalScrollIndicator={IS_WEB}
       style={styles.scroll}
       contentContainerStyle={styles.content}
     >

@@ -33,7 +33,7 @@ export function Monthly30({ data, region }: { data: DayPoint[]; region: string |
 
       <ScrollView
         horizontal
-        showsHorizontalScrollIndicator={false}
+        showsHorizontalScrollIndicator={IS_WEB}
         contentContainerStyle={styles.scroll}
       >
         {data.map((d, i) => {

@@ -216,7 +216,7 @@ export function WeatherHero() {
         {/* 업종 + 산업별 빠른 질문 */}
         <ScrollView
           horizontal
-          showsHorizontalScrollIndicator={false}
+          showsHorizontalScrollIndicator={IS_WEB}
           style={styles.bizBar}
           contentContainerStyle={styles.bizBarContent}
           keyboardShouldPersistTaps="handled"
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   hero: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm, paddingBottom: spacing.xs },
   weekly: { paddingHorizontal: spacing.xl },
 
-  bizBar: { flexGrow: 0, maxHeight: 44 },
+  bizBar: { flexGrow: 0, maxHeight: IS_WEB ? 60 : 44 },
   bizBarContent: { paddingHorizontal: spacing.lg, gap: spacing.sm, alignItems: 'center' },
   bizChip: {
     flexDirection: 'row',
