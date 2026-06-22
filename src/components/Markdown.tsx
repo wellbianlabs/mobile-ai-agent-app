@@ -2,6 +2,7 @@ import { Fragment, type ReactNode } from 'react';
 import { Linking, StyleSheet, Text, View, type TextStyle } from 'react-native';
 
 import { radius, sky, spacing } from '@/theme/tokens';
+import { WbViz } from './WbViz';
 
 /**
  * 의존성 없는 경량 마크다운 렌더러.
@@ -31,7 +32,8 @@ type Block =
   | { kind: 'quote'; text: string }
   | { kind: 'hr' }
   | { kind: 'list'; ordered: boolean; items: string[] }
-  | { kind: 'table'; header: string[]; rows: string[][] };
+  | { kind: 'table'; header: string[]; rows: string[][] }
+  | { kind: 'viz'; vizType: string; text: string };
 
 function parseBlocks(src: string): Block[] {
   const lines = src.split('\n');
@@ -49,9 +51,10 @@ function parseBlocks(src: string): Block[] {
       continue;
     }
 
-    // 코드 펜스 ``` ... ```
-    const fence = line.match(/^\s*```/);
+    // 코드 펜스 ``` ... ``` (언어 캡처: wb:* 는 인텔리전스 비주얼로 라우팅)
+    const fence = line.match(/^\s*```\s*([\w:-]+)?/);
     if (fence) {
+      const lang = fence[1] ?? '';
       const body: string[] = [];
       i++;
       while (i < lines.length && !/^\s*```/.test(lines[i])) {
@@ -59,7 +62,11 @@ function parseBlocks(src: string): Block[] {
         i++;
       }
       i++; // 닫는 펜스 소비
-      blocks.push({ kind: 'code', text: body.join('\n') });
+      if (lang.startsWith('wb:')) {
+        blocks.push({ kind: 'viz', vizType: lang.slice(3), text: body.join('\n') });
+      } else {
+        blocks.push({ kind: 'code', text: body.join('\n') });
+      }
       continue;
     }
 
@@ -189,6 +196,8 @@ function Block({ block, baseStyle }: { block: Block; baseStyle?: TextStyle }) {
       );
     case 'table':
       return <Table header={block.header} rows={block.rows} baseStyle={baseStyle} />;
+    case 'viz':
+      return <WbViz type={block.vizType} raw={block.text} />;
     default:
       return null;
   }
