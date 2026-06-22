@@ -51,6 +51,18 @@ export const INDUSTRIES: Industry[] = [
     presets: ['주말 야외 행사 적기는?', '관광객 몰릴 좋은 날은?', '우천 대비 운영 조정 필요?'],
   },
   {
+    id: 'fashion',
+    label: '패션·뷰티',
+    icon: 'shopping-bag',
+    presets: ['날씨로 이번 주 의류 판매 전략?', '기온 변화 맞춘 신상 진열은?', '장마·환절기 뷰티 수요 변화?'],
+  },
+  {
+    id: 'marine',
+    label: '해양·수산',
+    icon: 'anchor',
+    presets: ['오늘 조업 나가도 될까? (파고)', '주말 출항 가능 여부 알려줘', '풍랑·너울 안전 경보 있어?'],
+  },
+  {
     id: 'general',
     label: '일반',
     icon: 'cloud',
