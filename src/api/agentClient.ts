@@ -57,7 +57,7 @@ export interface SendOptions {
   endpoint?: string;
   /** 인증 토큰 등 추가 헤더. Content-Type 은 직접 지정하지 마세요(경계값 자동 생성). */
   headers?: Record<string, string>;
-  /** 요청 타임아웃(ms). 기본 30s. */
+  /** 요청 타임아웃(ms). 기본 90s(서버 함수 60s보다 길게 — 조기 취소 방지). */
   timeoutMs?: number;
   signal?: AbortSignal;
 }
@@ -157,7 +157,7 @@ export async function sendUnifiedPayload(
   const {
     endpoint = AGENT_ENDPOINT,
     headers = {},
-    timeoutMs = 30_000,
+    timeoutMs = 90_000,
     signal,
   } = options;
 
@@ -191,15 +191,15 @@ export async function sendUnifiedPayload(
     const requestId = res.headers.get('x-request-id') ?? undefined;
 
     if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      throw new Error(`Agent API ${res.status}: ${text || res.statusText}`);
+      await res.text().catch(() => '');
+      throw new Error('분석이 잠시 지연되고 있어요. 다시 시도해 주세요.');
     }
 
     const data = (await res.json().catch(() => ({}))) as Partial<AgentResponse>;
     return { ok: true, requestId, ...data };
   } catch (err) {
     if ((err as Error).name === 'AbortError') {
-      throw new Error('요청이 시간 초과되었거나 취소되었습니다.');
+      throw new Error('분석이 잠시 지연되고 있어요. 다시 시도해 주세요.');
     }
     throw err;
   } finally {
