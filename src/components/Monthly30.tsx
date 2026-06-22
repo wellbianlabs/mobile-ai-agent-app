@@ -1,19 +1,15 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { spacing } from '@/theme/tokens';
+import { HERO_TEXT_SHADOW, IS_WEB, sky, spacing } from '@/theme/tokens';
 import type { DayPoint } from '@/utils/weatherSummary';
 
 /**
  * 30일 장기전망(케이웨더, 국내 권역 단위) — 가로 스크롤 일별 카드.
- * ⚠️ 권역 단위·추세 위주(2주 이후 신뢰도 낮음)임을 헤더에 명시.
+ * 웹=모노 연회색 / 네이티브=다크 유리. ⚠️ 권역 단위·추세 위주임을 헤더에 명시.
  */
 
 const WD = ['일', '월', '화', '수', '목', '금', '토'];
-const SHADOW = {
-  textShadowColor: 'rgba(0,0,0,0.35)',
-  textShadowOffset: { width: 0, height: 1 },
-  textShadowRadius: 6,
-} as const;
+const SHADOW = HERO_TEXT_SHADOW;
 
 function parts(date: string): { wd: string; md: string } {
   const [y, m, d] = date.split('-').map(Number);
@@ -60,10 +56,10 @@ export function Monthly30({ data, region }: { data: DayPoint[]; region: string |
 
 const styles = StyleSheet.create({
   panel: {
-    backgroundColor: 'rgba(20,40,70,0.28)',
+    backgroundColor: sky.panelBg,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.22)',
+    borderColor: sky.panelBorder,
     paddingVertical: spacing.md,
   },
   header: {
@@ -72,15 +68,15 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: spacing.lg,
   },
-  title: { color: '#fff', fontSize: 13, fontWeight: '700', ...SHADOW },
+  title: { color: sky.panelText, fontSize: 13, fontWeight: '700', ...SHADOW },
   regionChip: {
-    backgroundColor: 'rgba(255,255,255,0.22)',
+    backgroundColor: IS_WEB ? '#E5E5E7' : 'rgba(255,255,255,0.22)',
     borderRadius: 999,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
   },
-  regionText: { color: '#fff', fontSize: 11, fontWeight: '600' },
-  note: { color: '#fff', opacity: 0.7, fontSize: 11, paddingHorizontal: spacing.lg, marginTop: 2, ...SHADOW },
+  regionText: { color: sky.panelText, fontSize: 11, fontWeight: '600' },
+  note: { color: sky.panelDim, fontSize: 11, paddingHorizontal: spacing.lg, marginTop: 2, ...SHADOW },
   scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, gap: spacing.sm },
   cell: {
     alignItems: 'center',
@@ -88,14 +84,16 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: IS_WEB ? '#FFFFFF' : 'rgba(255,255,255,0.08)',
+    borderWidth: IS_WEB ? 1 : 0,
+    borderColor: sky.panelBorder,
     minWidth: 50,
   },
-  cellNow: { backgroundColor: 'rgba(20,40,70,0.5)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' },
-  wd: { color: '#fff', fontSize: 12.5, fontWeight: '600', ...SHADOW },
-  weekend: { color: '#FFD9C2' },
-  md: { color: '#fff', opacity: 0.7, fontSize: 10.5, ...SHADOW },
+  cellNow: { backgroundColor: sky.panelBgStrong, borderWidth: 1, borderColor: sky.panelBorder },
+  wd: { color: sky.panelText, fontSize: 12.5, fontWeight: '600', ...SHADOW },
+  weekend: { color: sky.warn },
+  md: { color: sky.panelDim, fontSize: 10.5, ...SHADOW },
   emoji: { fontSize: 18, marginVertical: 1 },
-  max: { color: '#fff', fontSize: 14, fontWeight: '700', ...SHADOW },
-  min: { color: '#fff', opacity: 0.75, fontSize: 12, ...SHADOW },
+  max: { color: sky.panelText, fontSize: 14, fontWeight: '700', ...SHADOW },
+  min: { color: sky.panelDim, fontSize: 12, ...SHADOW },
 });

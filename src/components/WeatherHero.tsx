@@ -23,7 +23,7 @@ import { useLocationWeather } from '@/hooks/useLocationWeather';
 import { useMorningBriefing } from '@/hooks/useMorningBriefing';
 import { useSendMessage } from '@/hooks/useSendMessage';
 import { useMultimodalStore } from '@/store/multimodalStore';
-import { sky, spacing } from '@/theme/tokens';
+import { HERO_TEXT_SHADOW, IS_WEB, sky, spacing } from '@/theme/tokens';
 import { getIndustry } from '@/utils/industries';
 import { getSkyScene } from '@/utils/skyTheme';
 
@@ -107,7 +107,7 @@ export function WeatherHero() {
         {/* 상단 칩 + 아침 브리핑 토글 */}
         <View style={styles.top}>
           <View style={styles.chip}>
-            <Feather name="cloud" size={15} color="#fff" />
+            <Feather name="cloud" size={15} color={sky.heroText} />
             <Text style={styles.chipText}>
               {place ? `${place} 날씨` : '오늘 날씨 요약'}
             </Text>
@@ -119,7 +119,7 @@ export function WeatherHero() {
               style={[styles.bell, briefing.enabled && styles.bellOn]}
               accessibilityLabel="아침 브리핑 설정"
             >
-              <Feather name={briefing.enabled ? 'bell' : 'bell-off'} size={16} color="#fff" />
+              <Feather name={briefing.enabled ? 'bell' : 'bell-off'} size={16} color={sky.heroText} />
             </Pressable>
           )}
         </View>
@@ -140,7 +140,7 @@ export function WeatherHero() {
 
           {loading && (
             <View style={styles.loadingRow}>
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={sky.heroDim} />
               <Text style={styles.loadingText}>현재 위치 날씨를 불러오는 중…</Text>
             </View>
           )}
@@ -167,7 +167,7 @@ export function WeatherHero() {
             <>
               <Text style={styles.headline}>무엇을{'\n'}도와드릴까요?</Text>
               <Pressable style={styles.permBtn} onPress={reload}>
-                <Feather name="map-pin" size={15} color="#fff" />
+                <Feather name="map-pin" size={15} color={sky.heroText} />
                 <Text style={styles.permText}>위치 권한 허용하고 날씨 보기</Text>
               </Pressable>
             </>
@@ -177,7 +177,7 @@ export function WeatherHero() {
             <>
               <Text style={styles.headline}>무엇을{'\n'}도와드릴까요?</Text>
               <Pressable style={styles.permBtn} onPress={reload}>
-                <Feather name="refresh-cw" size={14} color="#fff" />
+                <Feather name="refresh-cw" size={14} color={sky.heroText} />
                 <Text style={styles.permText}>날씨 다시 불러오기</Text>
               </Pressable>
             </>
@@ -262,12 +262,8 @@ export function WeatherHero() {
   );
 }
 
-/** 배경 이미지 위 흰 글자 가독성용 그림자. */
-const TEXT_SHADOW = {
-  textShadowColor: 'rgba(0,0,0,0.35)',
-  textShadowOffset: { width: 0, height: 1 },
-  textShadowRadius: 8,
-} as const;
+/** 배경 위 글자 그림자(웹=없음, 네이티브=흰 글자용). */
+const TEXT_SHADOW = HERO_TEXT_SHADOW;
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
@@ -288,7 +284,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: sky.chipBorder,
   },
-  bellOn: { backgroundColor: 'rgba(255,255,255,0.32)' },
+  bellOn: { backgroundColor: IS_WEB ? '#E5E5E7' : 'rgba(255,255,255,0.32)' },
   chip: {
     alignSelf: 'flex-start',
     flexDirection: 'row',
@@ -301,7 +297,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: 7,
   },
-  chipText: { color: '#fff', fontSize: 13.5, fontWeight: '600', ...TEXT_SHADOW },
+  chipText: { color: sky.heroText, fontSize: 13.5, fontWeight: '600', ...TEXT_SHADOW },
   scrollBody: { paddingBottom: spacing.lg },
   hero: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm, paddingBottom: spacing.lg },
   weekly: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },
@@ -319,7 +315,7 @@ const styles = StyleSheet.create({
   },
   bizChipText: { color: '#fff', fontSize: 13, fontWeight: '700' },
   presetChip: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: IS_WEB ? '#F2F2F2' : 'rgba(255,255,255,0.92)',
     borderWidth: 1,
     borderColor: sky.chipBorder,
     borderRadius: 999,
@@ -338,12 +334,12 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
     ...TEXT_SHADOW,
   },
-  clockDate: { color: '#fff', opacity: 0.9, fontSize: 13, fontWeight: '500', marginTop: 2, ...TEXT_SHADOW },
+  clockDate: { color: sky.heroDim, fontSize: 13, fontWeight: '500', marginTop: 2, ...TEXT_SHADOW },
 
   sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: spacing.sm },
-  sourceText: { color: '#fff', opacity: 0.9, fontSize: 12, fontWeight: '500', ...TEXT_SHADOW },
+  sourceText: { color: sky.heroDim, fontSize: 12, fontWeight: '500', ...TEXT_SHADOW },
   loadingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.lg },
-  loadingText: { color: '#fff', fontSize: 15, ...TEXT_SHADOW },
+  loadingText: { color: sky.heroDim, fontSize: 15, ...TEXT_SHADOW },
   headline: {
     color: sky.heroText,
     fontFamily: 'serif',
@@ -354,7 +350,7 @@ const styles = StyleSheet.create({
     ...TEXT_SHADOW,
   },
   advice: {
-    color: '#fff',
+    color: sky.heroAccent,
     fontFamily: 'serif',
     fontSize: 19,
     fontWeight: '600',
@@ -363,7 +359,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     ...TEXT_SHADOW,
   },
-  temp: { color: '#fff', opacity: 0.95, fontSize: 15, marginTop: spacing.md, fontWeight: '500', ...TEXT_SHADOW },
+  temp: { color: sky.heroDim, fontSize: 15, marginTop: spacing.md, fontWeight: '500', ...TEXT_SHADOW },
   hourly: { paddingBottom: spacing.md },
   permBtn: {
     alignSelf: 'flex-start',
@@ -378,5 +374,5 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     marginTop: spacing.xl,
   },
-  permText: { color: '#fff', fontSize: 14.5, fontWeight: '600' },
+  permText: { color: sky.heroText, fontSize: 14.5, fontWeight: '600' },
 });

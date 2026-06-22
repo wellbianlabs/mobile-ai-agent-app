@@ -1,3 +1,8 @@
+import { Platform } from 'react-native';
+
+/** 웹은 배경 이미지 없는 모노(밝은) 스타일 — 일반 LLM 느낌. 네이티브는 하늘 배경 유지. */
+export const IS_WEB = Platform.OS === 'web';
+
 /**
  * 디자인 토큰 — "심플 & 럭셔리" 다크 테마.
  * 잉크 블랙 배경 + 아이보리 텍스트 + 샴페인 골드 포인트 + 헤어라인 보더.
@@ -57,15 +62,15 @@ export const sky = {
   gradient: ['#2E86DE', '#4AA0E6', '#86C2EF', '#CFE7F7'] as const,
   gradientNight: ['#15223B', '#243B63', '#3C5A86', '#6E89AE'] as const,
 
-  // 히어로 위 텍스트
-  heroText: '#FFFFFF',
-  heroAccent: '#D7EBFB', // 보조(조언) 라인 — 살짝 옅은 블루화이트
-  heroDim: 'rgba(255,255,255,0.82)',
+  // 히어로 위 텍스트 (웹=모노 먹색 / 네이티브=흰색)
+  heroText: IS_WEB ? '#1A1A1A' : '#FFFFFF',
+  heroAccent: IS_WEB ? '#6B7280' : '#D7EBFB',
+  heroDim: IS_WEB ? '#6B7280' : 'rgba(255,255,255,0.82)',
 
-  // 유리 칩/패널
-  chip: 'rgba(255,255,255,0.22)',
-  chipBorder: 'rgba(255,255,255,0.35)',
-  glass: 'rgba(255,255,255,0.16)',
+  // 칩/패널 (웹=연회색 / 네이티브=유리)
+  chip: IS_WEB ? '#F2F2F2' : 'rgba(255,255,255,0.22)',
+  chipBorder: IS_WEB ? '#E2E2E2' : 'rgba(255,255,255,0.35)',
+  glass: IS_WEB ? '#F2F2F2' : 'rgba(255,255,255,0.16)',
 
   // 라이트 표면(대화/카드)
   surface: '#FFFFFF',
@@ -75,8 +80,20 @@ export const sky = {
   inkMuted: '#5B6B82',
   inkFaint: '#94A2B5',
 
-  // 포인트
-  brand: '#2E86DE',
-  brandSoft: 'rgba(46,134,222,0.12)',
+  // 히어로 위 패널/스트립(시간별·주간·30일) — 웹=연회색 카드+먹색 / 네이티브=다크 유리+흰색
+  panelBg: IS_WEB ? '#F7F7F8' : 'rgba(20,40,70,0.28)',
+  panelBgStrong: IS_WEB ? '#ECECEE' : 'rgba(20,40,70,0.5)',
+  panelBorder: IS_WEB ? '#E5E5E7' : 'rgba(255,255,255,0.22)',
+  panelText: IS_WEB ? '#1A1A1A' : '#FFFFFF',
+  panelDim: IS_WEB ? '#6B7280' : 'rgba(255,255,255,0.72)',
+
+  // 포인트 (웹은 모노 톤다운)
+  brand: IS_WEB ? '#404040' : '#2E86DE',
+  brandSoft: IS_WEB ? '#F0F0F0' : 'rgba(46,134,222,0.12)',
   warn: '#E8833A',
 } as const;
+
+/** 히어로 흰 글자용 그림자 — 웹(밝은 배경)에선 없음. */
+export const HERO_TEXT_SHADOW = IS_WEB
+  ? {}
+  : ({ textShadowColor: 'rgba(0,0,0,0.35)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 8 } as const);
