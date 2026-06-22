@@ -298,9 +298,9 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   chipText: { color: sky.heroText, fontSize: 13.5, fontWeight: '600', ...TEXT_SHADOW },
-  scrollBody: { paddingBottom: spacing.lg },
-  hero: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm, paddingBottom: spacing.lg },
-  weekly: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },
+  scrollBody: { paddingBottom: spacing.lg, gap: spacing.md },
+  hero: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm, paddingBottom: spacing.xs },
+  weekly: { paddingHorizontal: spacing.xl },
 
   bizBar: { flexGrow: 0, maxHeight: 44 },
   bizBarContent: { paddingHorizontal: spacing.lg, gap: spacing.sm, alignItems: 'center' },
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     ...TEXT_SHADOW,
   },
   temp: { color: sky.heroDim, fontSize: 15, marginTop: spacing.md, fontWeight: '500', ...TEXT_SHADOW },
-  hourly: { paddingBottom: spacing.md },
+  hourly: {},
   permBtn: {
     alignSelf: 'flex-start',
     flexDirection: 'row',
